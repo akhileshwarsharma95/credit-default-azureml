@@ -33,16 +33,15 @@ The workspace creates its own storage account, key vault and Application Insight
    bash infra/setup_azure.sh
    ```
    This registers the resource providers, creates `rg-credit-risk` and the workspace, writes `.env`, and (with `GITHUB_REPO`) creates an Entra app with **federated credentials** so GitHub Actions can log in with no stored password. It prints the three secrets and three variables to add in GitHub (or sets them with `gh`).
-4. **Check compute quota** in Azure ML studio (ml.azure.com) -> *Compute* -> *Quota*. The cluster uses `Standard_DS11_v2` (2 vCPU, 14 GB), max 2 nodes = 4 vCPUs, which fits typical trial quotas. If the DSv2 family shows 0, pick another family that has quota: `export AZUREML_VM_SIZE=Standard_D2as_v4`, or request an increase (usually approved within minutes for small numbers).
+4. **Check compute quota** in Azure ML studio (ml.azure.com) -> *Compute* -> *Quota*. The cluster and the endpoint use `Standard_D2as_v4` (2 vCPU, 8 GB; DASv4 family), max 2 nodes = 4 vCPUs, set in `src/creditrisk/config.yaml`. If that family shows 0, pick one that has quota (`export AZUREML_VM_SIZE=...`, `AZUREML_ENDPOINT_SKU=...`) or request an increase (usually approved within minutes for small numbers).
 
 ## 3. Run the case study
 
 On your laptop (Python 3.10 or 3.11 recommended, same as Azure) after `az login`, or in Cloud Shell:
 
 ```bash
-pip install -r requirements.txt
-python scripts/download_data.py                  # official UCI file -> data/raw/
-python pipeline/run_pipeline.py --wait           # creates cluster + data asset, submits, streams logs
+make setup                                        # uv sync + official UCI file -> data/raw/
+make train                                        # creates cluster + data asset, submits, streams logs
 ```
 
 The first run builds the pinned environment image (10-15 minutes, once); the four steps then take about 8 minutes on 2 vCPUs. The CLI route does the same with `az ml job create -f pipeline/training_pipeline.yml` (see the header of that file).
@@ -56,32 +55,32 @@ The first run builds the pinned environment image (10-15 minutes, once); the fou
 ## 4. Monitoring demo (batch)
 
 ```bash
-python scripts/make_batches.py                                         # stable + downturn batches
-python pipeline/run_batch_pipeline.py --batch data/batches/portfolio_downturn.csv --wait
+make batches                                      # stable + downturn batches
+make batch-monitor                                # downturn batch: score -> drift monitor -> insights
 ```
-The *monitor drift* step ends with `[DRIFT ALERT]`; its outputs hold the PSI table, plots and `alert.json`. Schedules: `--schedule "0 7 * * 1"` here (weekly) and `python pipeline/run_pipeline.py --schedule "0 6 1 * *"` (monthly retraining). They appear under *Jobs -> Schedules*.
+The *monitor drift* step ends with `[DRIFT ALERT]`; its outputs hold the PSI table, plots and `alert.json`. Schedules: `--schedule "0 7 * * 1"` here (weekly) and `uv run python pipeline/run_pipeline.py --schedule "0 6 1 * *"` (monthly retraining). They appear under *Jobs -> Schedules*.
 
 ## 5. Optional: real-time endpoint, model monitor, alerts
 
 ```bash
-python deploy/deploy_endpoint.py                   # ~15 min; smoke test; prints scoring URI
+make deploy                                        # ~15 min; smoke test; prints scoring URI
 az ml online-endpoint invoke -n <endpoint> -r deploy/sample_request.json -g rg-credit-risk -w mlw-credit-risk
-python monitoring/setup_model_monitor.py --email you@example.com
+uv run python monitoring/setup_model_monitor.py --email you@example.com
 ALERT_EMAIL=you@example.com AZUREML_ENDPOINT=<endpoint> bash infra/alerts.sh
-python deploy/deploy_endpoint.py --delete          # stop billing after the demo
+make delete-endpoint                               # stop billing after the demo
 ```
-`Standard_DS2_v2` needs 2 vCPUs plus a 20% reserve that Azure ML holds for upgrades, so scale the cluster to zero first (it does so 3 minutes after the last job) or use `--instance-type Standard_DS1_v2` on a tight quota. Request logs and latency land in the workspace's Application Insights (*Logs* -> `traces`, `requests`).
+An endpoint instance needs its vCPUs plus a 20% reserve that Azure ML holds for upgrades, and it shares the family quota with the cluster, so let the cluster scale to zero first (it does so 3 minutes after the last job). A fresh subscription also needs the Microsoft.Compute, Network, PolicyInsights and Cdn providers, which `infra/setup_azure.sh` registers. Request logs and latency land in the workspace's Application Insights (*Logs* -> `traces`, `requests`).
 
 ## 6. The app
 
-Local: `python scripts/fetch_model.py --output app/model && streamlit run app/streamlit_app.py`.
+Local: `uv run python scripts/fetch_model.py --output app/model && make app`.
 Cloud: `bash scripts/deploy_app.sh` builds the root `Dockerfile` and deploys it to Azure Container Apps (consumption plan, scales to zero; the monthly free grant covers a demo). Set `MIN_REPLICAS=1` on demo day to avoid a cold start. To enable the LLM agent, set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` before running the script (new subscriptions may need a quota request for Azure OpenAI; the agent falls back to offline SQL templates). To score through the endpoint, also set `SCORING_URI` and `SCORING_KEY`.
 
 ## 7. GitHub Actions
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci` | every push / PR | ruff, 31 tests (end to end on synthetic data), dry-run of every Azure spec |
+| `ci` | every push / PR | ruff format + lint, 46 tests (end to end on synthetic data), dry-run of every Azure spec |
 | `train-and-deploy` | push to `main` touching model code, or manual | CI -> Azure ML pipeline (OIDC) -> model card in the job summary -> optional blue/green deploy behind the `production` environment |
 | `batch-scoring-and-monitoring` | manual | scores a demo batch and runs the drift monitor |
 | `deploy-app` | manual | deploys the Streamlit app to Container Apps |

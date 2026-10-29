@@ -34,24 +34,24 @@ jobs:
       version: ${{ steps.info.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
-          cache: pip
+          enable-cache: true
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - run: pip install -r requirements.txt
+      - run: uv sync --frozen
       - name: Get raw data (UCI)
-        run: python scripts/download_data.py
+        run: uv run python scripts/download_data.py
       - name: Submit Azure ML training pipeline and wait
-        run: python pipeline/run_pipeline.py --wait --n-trials "${{ inputs.n_trials || '25' }}"
+        run: uv run python pipeline/run_pipeline.py --wait --n-trials "${{ inputs.n_trials || '25' }}"
       - id: info
         name: Read registration result
         run: |
-          python - >> "$GITHUB_OUTPUT" <<'PY'
+          uv run python - >> "$GITHUB_OUTPUT" <<'PY'
           import json
           info = json.load(open("outputs/last_model_info.json"))
           print(f"registered={str(info.get('registered', False)).lower()}")
@@ -68,15 +68,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
-          cache: pip
+          enable-cache: true
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - run: pip install -r requirements.txt
+      - run: uv sync --frozen
       - name: Blue/green deployment with smoke test
-        run: python deploy/deploy_endpoint.py --model-version "${{ needs.train.outputs.version }}"
+        run: uv run python deploy/deploy_endpoint.py --model-version "${{ needs.train.outputs.version }}"

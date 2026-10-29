@@ -1165,7 +1165,7 @@ const RF = window.ReactFlow;
 // centre coordinates on a 1280 x 690 canvas; svc nodes are 134 x 72 (w overrides), steps 96 x 54
 const NODES = {
   repo: { x: 112, y: 140, icon: "github", t: "GitHub repo", s: "private · main" },
-  ci: { x: 112, y: 290, icon: "githubactions", t: "CI workflow", s: "ruff · 31 tests · dry-runs" },
+  ci: { x: 112, y: 290, icon: "githubactions", t: "CI workflow", s: "ruff · 46 tests · dry-runs" },
   cd: { x: 112, y: 440, icon: "githubactions", t: "train-and-deploy", s: "OIDC · approval gate" },
   storage: { x: 315, y: 140, icon: "az/storage", t: "Blob storage", s: "versioned data assets" },
   acr: { x: 315, y: 290, icon: "az/container-registry", t: "Container Registry", s: "pinned env image" },
@@ -1226,7 +1226,7 @@ const FLOW_NODES = {};
 for (const [s, , t, , fl] of EDGES) for (const f of fl) (FLOW_NODES[f] = FLOW_NODES[f] || new Set()).add(s).add(t);
 const DETAILS = {
   repo: ["GitHub repository", "Private repo, everything as code: 7 YAML components, SDK v2 submitters, locked environments, infra scripts, tests, runbook."],
-  ci: ["CI workflow (every push / PR)", "ruff, 31 tests (end to end on synthetic data) and a dry-run of every Azure ML spec, so a broken component never reaches Azure."],
+  ci: ["CI workflow (every push / PR)", "ruff format + lint, 46 tests (end to end on synthetic data) and a dry-run of every Azure ML spec, so a broken component never reaches Azure. Dependencies install from uv.lock."],
   cd: ["train-and-deploy workflow", "On push to main (model code) or manual dispatch: CI, then submit the Azure ML pipeline, wait, publish the model card to the job summary. Deployment only on manual dispatch, behind the GitHub production environment."],
   entra: ["Microsoft Entra ID app registration", "Workload identity federation: GitHub exchanges its OIDC token for an Azure token. No stored client secret. Contributor scoped to rg-credit-risk only."],
   storage: ["Storage account (workspace datastore)", "Raw UCI file registered as data asset credit-default-raw with a sha256 tag; batches registered as their own assets. Every model version points to its data version."],
@@ -1426,7 +1426,8 @@ function Training() {
         <li><b>Locked environment</b> (environments/train-lock.txt) built once into ACR; same image for every step</li>
         <li><b>Data lineage:</b> raw file → data asset with sha256 tag → model tag <code>credit-default-raw:1</code></li>
         <li><b>MLflow everywhere:</b> params, metrics, plots and the model, natively in the workspace</li>
-        <li><b>Same code locally:</b> scripts/run_local.py runs every step with a SQLite MLflow registry (~3 min)</li>
+        <li><b>Same code locally:</b> <code>make local</code> runs every step with a SQLite MLflow registry (~3 min)</li>
+        <li><b>One config:</b> business and technical parameters in <code>src/creditrisk/config.yaml</code></li>
         <li><b>Retraining:</b> monthly schedule (<code>--schedule "0 6 1 * *"</code>), drift-triggered runs; the gate decides</li>
       </ul></div>
     </div>
@@ -1631,7 +1632,7 @@ function Cockpit() {
       lead="Streamlit app on Azure Container Apps (scales to zero), driven by the registered model package or the endpoint. One screen per question a credit-risk team asks." />
     <div class="row" style=${{ marginBottom: "12px" }}>
       <a class="iconbtn on" href="http://localhost:8501" target="_blank" rel="noopener" style=${{ textDecoration: "none", padding: "6px 14px", fontSize: "13px" }}>Open live cockpit ↗</a>
-      <span class="small muted">local: <code>MODEL_DIR=outputs/local/model_package streamlit run app/streamlit_app.py</code></span>
+      <span class="small muted">local: <code>make app</code> (registered model v2 in <code>app/model</code>)</span>
     </div>
     <div class="card"><${Gallery} items=${[
       ["app_portfolio", "Portfolio", "Portfolio view: exposure, expected loss, grade mix, segments."],
@@ -1655,7 +1656,7 @@ function Governance() {
     <div class="grid g2">
       <div class="card"><h3><img src=${I("githubactions")} alt="" style=${{ width: "20px", verticalAlign: "-4px", marginRight: "8px" }} />GitHub Actions workflows</h3>
         <table><thead><tr><th>Workflow</th><th>Trigger</th><th>Does</th></tr></thead><tbody>
-          <tr><td><code>ci</code></td><td>every push / PR</td><td>ruff, 31 tests, dry-run of every Azure spec</td></tr>
+          <tr><td><code>ci</code></td><td>every push / PR</td><td>ruff, 46 tests, dry-run of every Azure spec</td></tr>
           <tr><td><code>train-and-deploy</code></td><td>push to main (model code), manual</td><td>CI → Azure ML pipeline → model card in job summary → optional blue/green deploy</td></tr>
           <tr><td><code>batch-scoring-and-monitoring</code></td><td>manual</td><td>scores a demo batch, runs the drift monitor</td></tr>
           <tr><td><code>deploy-app</code></td><td>manual</td><td>Streamlit app to Container Apps</td></tr>
@@ -1672,9 +1673,9 @@ function Governance() {
         <li>Quarterly model review: model card + monitoring history, signed off by credit risk and the model owner</li>
       </ul>
       <h3 class="section">Testing & reproducibility</h3><ul class="clean small">
-        <li>31 tests: units + end to end on synthetic data (~30 s); same suite in CI</li>
-        <li>Locked dependencies (<code>scripts/lock_env.py</code>), pinned environment image</li>
-        <li>scripts/run_local.py = the Azure pipeline, locally with an MLflow SQLite registry</li>
+        <li>46 tests: units + end to end on synthetic data (~15 s); same suite in CI (<code>make check</code>)</li>
+        <li>uv-locked dependencies; Azure environments generated from the same lock (<code>make lock</code>)</li>
+        <li><code>make local</code> = the Azure pipeline, locally with an MLflow SQLite registry</li>
       </ul></div>
     </div>
   </div>`;

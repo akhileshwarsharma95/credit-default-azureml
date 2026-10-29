@@ -32,7 +32,7 @@ Operating model for the pipeline, the model and the endpoint: what is monitored,
 ### 1. Pipeline or job failed
 1. Studio -> *Jobs* -> failed run -> failed step -> *Outputs + logs* (`user_logs/std_log.txt`).
 2. Environment build error: check *Environments* -> build log; usually transient - rerun.
-3. Code error: reproduce locally with `python scripts/run_local.py --n_trials 2`, fix, add a test, merge; CI reruns the pipeline.
+3. Code error: reproduce locally with `uv run python scripts/run_local.py --n_trials 2`, fix, add a test, merge; CI reruns the pipeline.
 4. No model is promoted by a failed run, so production is unaffected; nothing to roll back.
 
 ### 2. Data-quality gate failed
@@ -54,11 +54,11 @@ Operating model for the pipeline, the model and the endpoint: what is monitored,
 ### 5. Endpoint incident (latency, errors)
 1. Application Insights -> *Failures* / *Performance*; endpoint *Logs* in studio (`az ml online-deployment get-logs -e <ep> -n <deployment>`).
 2. Capacity: scale out `az ml online-deployment update --name blue --endpoint-name <ep> --set instance_count=2`.
-3. Bad release: `python deploy/deploy_endpoint.py --rollback` sends 100% traffic to the previous deployment (keep it with `--keep-old` during canary releases).
+3. Bad release: `uv run python deploy/deploy_endpoint.py --rollback` sends 100% traffic to the previous deployment (keep it with `--keep-old` during canary releases).
 4. Batch scoring keeps working independently of the endpoint.
 
 ### 6. A bad model reached production
-1. Roll back the endpoint (`--rollback`) or redeploy a known-good version: `python deploy/deploy_endpoint.py --model-version <n>`.
+1. Roll back the endpoint (`--rollback`) or redeploy a known-good version: `uv run python deploy/deploy_endpoint.py --model-version <n>`.
 2. Batch scoring: pass `--model-version <n>` to `run_batch_pipeline.py`.
 3. Root-cause through lineage: the model version tags hold the git SHA and data asset version; the model card holds the evidence the gate saw.
 

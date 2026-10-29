@@ -77,30 +77,34 @@ flowchart LR
 | Backtesting | Jeffreys test per grade with traffic lights; realised AUC vs. validation AUC on labelled batches |
 | Drift monitoring | PSI per feature, score and rating grade vs. a baseline stored with each model (`src/monitor_drift.py`); Azure ML model monitor on the endpoint |
 | Explainability | Exact TreeSHAP / linear SHAP per client, reason codes in batch output, endpoint response and app |
-| Pipelines: testing, versioning, docs, incidents | 31 tests in CI, versioned data/model/environment, locked dependencies, model card per version, `docs/RUNBOOK.md` |
+| Pipelines: testing, versioning, docs, incidents | 46 tests in CI, ruff, versioned data/model/environment, uv-locked dependencies, central config, model card per version, `docs/RUNBOOK.md` |
 | Loss data, early warning, limit steering, clustering, portfolio insights | `creditrisk/policy.py` + SQL in `creditrisk/sql/`: EL, IFRS 9 staging, watchlist, limit actions, k-means segments, roll rates and a 3-month Markov projection |
 | Python and SQL | Python package + DuckDB SQL, Power BI-ready output tables |
 | GenAI "talk to your data" | `creditrisk/agent.py`: tool-calling agent with SELECT-only SQL, locked-down DuckDB, OpenTelemetry tracing; offline fallback |
 | Monitoring, tracing, observability | MLflow in Azure ML, Application Insights (endpoint + app), OpenTelemetry spans, Azure Monitor alerts |
 
-## Quickstart
+## Commands
 
-```bash
-pip install -r requirements.txt                     # Python 3.10-3.13; pinned lock
-python scripts/download_data.py                     # official UCI file -> data/raw/
+Requires [uv](https://docs.astral.sh/uv/) (it installs Python 3.10–3.13 and the locked packages). Every `make` target is one line in the `Makefile`; the right-hand column runs the same thing without make.
 
-# Local: every step exactly as in Azure, MLflow registry on SQLite (~4 min)
-python scripts/run_local.py
-MODEL_DIR=outputs/local/model_package streamlit run app/streamlit_app.py
+| Target | What it does | Command |
+|---|---|---|
+| `make setup` | Install the locked environment, download the UCI data | `uv sync && uv run python scripts/download_data.py` |
+| `make check` | Format check, lint and 46 tests (what CI runs) | `uv run ruff format --check . && uv run ruff check . && uv run pytest -q` |
+| `make format` | Format and apply safe lint fixes | `uv run ruff format . && uv run ruff check . --fix` |
+| `make local` | Every pipeline step locally, MLflow registry on SQLite (~3 min) | `uv run python scripts/run_local.py` |
+| `make app` | Streamlit cockpit | `uv run streamlit run app/streamlit_app.py` |
+| `make deck` | Rebuild the offline presentation | `uv run python docs/presentation/build.py` |
+| `make azure-setup` | Resource group, workspace, GitHub OIDC (see `docs/AZURE_SETUP.md`) | `bash infra/setup_azure.sh` |
+| `make train` | Training pipeline on Azure ML, streams logs | `uv run python pipeline/run_pipeline.py --wait` |
+| `make batches` | Stable and downturn demo batches | `uv run python scripts/make_batches.py` |
+| `make batch-monitor` | Batch scoring + drift monitor on the downturn batch | `uv run python pipeline/run_batch_pipeline.py --batch data/batches/portfolio_downturn.csv --wait` |
+| `make deploy` | Blue/green deployment of the latest registered model | `uv run python deploy/deploy_endpoint.py --instance-type Standard_D2as_v4` |
+| `make invoke` | Score `deploy/sample_request.json` on the endpoint | `az ml online-endpoint invoke -n <endpoint> -r deploy/sample_request.json -g rg-credit-risk -w mlw-credit-risk` |
+| `make delete-endpoint` | Delete the endpoint (stops hourly billing) | `uv run python deploy/deploy_endpoint.py --delete` |
+| `make lock` | Relock; regenerate the Azure and container environment files | `uv lock && uv run python scripts/lock_env.py` (+ `uv export` for `app/requirements.txt`) |
 
-# Azure (first time: bash infra/setup_azure.sh, see docs/AZURE_SETUP.md)
-python pipeline/run_pipeline.py --wait              # training pipeline
-python scripts/make_batches.py
-python pipeline/run_batch_pipeline.py --batch data/batches/portfolio_downturn.csv --wait
-python deploy/deploy_endpoint.py                    # optional real-time endpoint
-
-pytest -q                                           # 31 tests, ~30 s
-```
+Parameters (costs, LGD/CCF, PD floor, master scale, registration gate, drift thresholds, training and Azure settings) live in `src/creditrisk/config.yaml`; command-line flags and `AZURE_*` / `AZUREML_*` environment variables override them.
 
 ## Repository layout
 
@@ -115,7 +119,7 @@ deploy/ monitoring/ infra/   endpoint (blue/green), Azure ML model monitor, work
 app/ Dockerfile    Streamlit cockpit and its container
 environments/      locked conda environments (training/scoring, serving)
 .github/workflows/ ci, train-and-deploy, batch monitoring, app deploy
-docs/              Azure setup, runbook, example model card, images, presentation.html (offline deck; rebuild: python docs/presentation/build.py)
+docs/              Azure setup, runbook, example model card, images, presentation.html (offline deck; rebuild: make deck)
 ```
 
 ## Notes
