@@ -8,3 +8,6 @@ mlflow==2.19.0
 sqlalchemy==2.0.36
 azureml-inference-server-http
 azureml-ai-monitoring
+# Transitive packages held at the tested versions
+graphene==3.4.3
+python-dateutil==2.9.0.post0

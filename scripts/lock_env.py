@@ -1,35 +1,29 @@
 """Regenerate the pinned Azure ML environments for Python 3.10 / linux-64.
 
-Resolves the top-level requirements with pip (no install) for the Azure base
-image's platform and writes fully pinned conda files, so cloud builds install
-exactly the tested package set.
+Resolves the top-level requirements with uv for the Azure base image's platform, constrained by
+uv.lock, and writes fully pinned conda files, so cloud builds install exactly the tested package set.
 
-    python scripts/lock_env.py            # environments/conda.yaml (+ train-lock.txt) and serving.yaml
+    uv run python scripts/lock_env.py      # environments/conda.yaml (+ train-lock.txt) and serving.yaml
 """
 
 from __future__ import annotations
 
-import json
 import subprocess
-import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PLATFORMS = ["manylinux_2_28_x86_64", "manylinux_2_17_x86_64", "manylinux2014_x86_64", "linux_x86_64"]
+EXCLUDE_NEWER = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["uv"]["exclude-newer"]
 
 
-def resolve(requirements: Path) -> list[tuple[str, str]]:
-    with tempfile.TemporaryDirectory() as tmp:
-        report = Path(tmp) / "report.json"
-        cmd = [sys.executable, "-m", "pip", "install", "--dry-run", "--ignore-installed", "--quiet", "--report", str(report),
-               "--python-version", "3.10", "--implementation", "cp", "--abi", "cp310", "--only-binary=:all:",
-               "--target", str(Path(tmp) / "t"), "-r", str(requirements)]
-        for p in PLATFORMS:
-            cmd += ["--platform", p]
-        subprocess.run(cmd, check=True)
-        data = json.loads(report.read_text())
-    return sorted((i["metadata"]["name"].lower(), i["metadata"]["version"]) for i in data["install"])
+def resolve(requirements: Path, constraints: Path | None = None) -> list[tuple[str, str]]:
+    cmd = ["uv", "pip", "compile", str(requirements), "--exclude-newer", EXCLUDE_NEWER, "--python-platform", "x86_64-manylinux_2_28",
+           "--python-version", "3.10", "--no-header", "--no-annotate", "--quiet"]
+    if constraints:
+        cmd += ["--constraint", str(constraints)]
+    out = subprocess.run(cmd, check=True, capture_output=True, text=True).stdout
+    return sorted((name.lower(), version) for name, version in (line.split("==") for line in out.splitlines() if "==" in line))
 
 
 def write_conda(pins, path: Path, name: str, header: str) -> None:
@@ -40,7 +34,11 @@ def write_conda(pins, path: Path, name: str, header: str) -> None:
 
 def main() -> None:
     env = ROOT / "environments"
-    train = resolve(env / "train-requirements.in")
+    # The job environment runs the same code as local and CI, so it is held to uv.lock
+    with tempfile.TemporaryDirectory() as tmp:
+        constraints = Path(tmp) / "constraints.txt"
+        subprocess.run(["uv", "export", "--no-hashes", "--no-emit-project", "--quiet", "-o", str(constraints)], check=True, cwd=ROOT)
+        train = resolve(env / "train-requirements.in", constraints)
     write_conda(train, env / "conda.yaml", "credit-default-train",
                 "# Azure ML job environment (training, evaluation, batch scoring, monitoring).\n"
                 "# Fully pinned lock for Python 3.10 / linux-64, resolved from environments/train-requirements.in\n"
