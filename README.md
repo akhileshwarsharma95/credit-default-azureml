@@ -114,7 +114,7 @@ deploy/ monitoring/ infra/   endpoint (blue/green), Azure ML model monitor, work
 app/ Dockerfile    Streamlit cockpit and its container
 environments/      locked conda environments (training/scoring, serving)
 .github/workflows/ ci, train-and-deploy, batch monitoring, app deploy
-docs/              Azure setup, runbook, example model card, images
+docs/              Azure setup, runbook, example model card, images, presentation.html (offline deck; rebuild: python docs/presentation/build.py)
 ```
 
 ## Notes

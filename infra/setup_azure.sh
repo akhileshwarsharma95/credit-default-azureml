@@ -22,7 +22,8 @@ echo "Subscription $SUB | tenant $TENANT | region $LOCATION"
 
 az extension add --name ml --upgrade --yes --only-show-errors
 for ns in Microsoft.MachineLearningServices Microsoft.Storage Microsoft.KeyVault Microsoft.ContainerRegistry \
-          Microsoft.Insights Microsoft.OperationalInsights Microsoft.App; do
+          Microsoft.Insights Microsoft.OperationalInsights Microsoft.App \
+          Microsoft.Compute Microsoft.Network Microsoft.PolicyInsights Microsoft.Cdn; do  # last four: managed online endpoints
   az provider register --namespace "$ns" --only-show-errors
 done
 
