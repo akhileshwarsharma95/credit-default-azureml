@@ -11,9 +11,12 @@ import mlflow
 import pandas as pd
 
 from creditrisk import drift, metrics, plots
+from creditrisk.config import load
 from creditrisk.schema import TARGET, read_table
 from creditrisk.scoring import load_package
 from creditrisk.tracking import log_metrics, write_json
+
+MONITORING = load()["business"]["monitoring"]
 
 
 def parse_args(argv=None):
@@ -49,7 +52,13 @@ def main(argv=None) -> None:
             if validation_auc is not None:
                 drop = float(validation_auc - perf["auc"])
                 summary["auc_drop_vs_validation"] = drop
-                summary["performance_status"] = "alert" if drop >= 0.05 else "warn" if drop >= 0.02 else "stable"
+                summary["performance_status"] = (
+                    "alert"
+                    if drop >= MONITORING["auc_drop_alert"]
+                    else "warn"
+                    if drop >= MONITORING["auc_drop_warn"]
+                    else "stable"
+                )
                 if summary["performance_status"] == "alert" or summary["backtest_red_grades"] > 0:
                     summary["drift_alert"] = True
                     summary["overall_status"] = "alert"

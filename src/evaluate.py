@@ -19,10 +19,13 @@ import pandas as pd
 from mlflow.tracking import MlflowClient
 
 from creditrisk import explain, metrics, plots, policy
+from creditrisk.config import load
 from creditrisk.modeling import unwrap_base
 from creditrisk.schema import MARRIAGE_LABELS, SEX_LABELS, TARGET, read_table
 from creditrisk.scoring import load_package, score_frame
 from creditrisk.tracking import log_metrics, log_table, write_json
+
+GATE = load()["business"]["registration_gate"]
 
 
 def parse_args(argv=None):
@@ -30,12 +33,12 @@ def parse_args(argv=None):
     p.add_argument("--model_input", required=True)
     p.add_argument("--test_data", required=True)
     p.add_argument("--evaluation_output", required=True)
-    p.add_argument("--model_name", default="credit-default-model")
-    p.add_argument("--min_auc", type=float, default=0.70)
-    p.add_argument("--max_ece", type=float, default=0.05)
-    p.add_argument("--champion_tolerance", type=float, default=0.005)
+    p.add_argument("--model_name", default=load()["technical"]["azure"]["model_name"])
+    p.add_argument("--min_auc", type=float, default=GATE["min_auc"])
+    p.add_argument("--max_ece", type=float, default=GATE["max_ece"])
+    p.add_argument("--champion_tolerance", type=float, default=GATE["champion_tolerance"])
     p.add_argument("--n_bootstrap", type=int, default=500)
-    p.add_argument("--random_state", type=int, default=42)
+    p.add_argument("--random_state", type=int, default=load()["technical"]["data"]["random_state"])
     return p.parse_args(argv)
 
 

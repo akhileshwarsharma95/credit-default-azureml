@@ -1,0 +1,52 @@
+# Central parameters for the credit default PD engine.
+# Precedence: command-line flag > environment / .env (Azure settings only) > this file.
+# The Azure component YAMLs repeat some defaults; tests/test_units.py keeps them equal to these values.
+
+business:
+  costs:                    # relative cost of a decision error; cut-off = cost_fp / (cost_fp + cost_fn)
+    cost_fn: 5.0            # missing a client who defaults
+    cost_fp: 1.0            # acting on a client who would have paid (lost margin, friction)
+  loss:
+    lgd: 0.60               # loss given default, unsecured revolving exposure
+    ccf: 0.50               # credit conversion factor on the undrawn limit
+    lifetime_years: 3.0     # behavioural life for lifetime ECL (IFRS 9 stage 2)
+  pd_floor: 0.001           # CRR3 input floor for qualifying revolving retail exposures
+  master_scale:             # rating grade, lower PD bound (inclusive), upper bound (exclusive)
+    - [A, 0.00, 0.05]
+    - [B, 0.05, 0.08]
+    - [C, 0.08, 0.12]
+    - [D, 0.12, 0.20]
+    - [E, 0.20, 0.35]
+    - [F, 0.35, 0.55]
+    - [G, 0.55, 1.0001]
+  sicr_grades: [F, G]       # significant increase in credit risk proxy (IFRS 9 stage 2)
+  registration_gate:        # a challenger is registered only if it passes all three
+    min_auc: 0.70
+    max_ece: 0.05
+    champion_tolerance: 0.005   # max AUC shortfall vs the champion on the same test set
+  monitoring:
+    psi_warn: 0.10
+    psi_alert: 0.25
+    auc_drop_warn: 0.02     # realised AUC below validation AUC, on labelled batches
+    auc_drop_alert: 0.05
+
+technical:
+  data:
+    test_size: 0.2
+    random_state: 42
+  training:
+    n_trials: 25            # Optuna trials (0 = default hyperparameters)
+    tuning_folds: 3
+    cv_folds: 5
+    calibration: isotonic
+    monotone: true
+    exclude_sensitive: true # SEX, MARRIAGE and AGE are used only for the fairness check
+  azure:                    # environment variables (AZUREML_*, AZURE_*) override these
+    resource_group: rg-credit-risk
+    workspace: mlw-credit-risk
+    compute: cpu-cluster
+    vm_size: Standard_D2as_v4
+    max_nodes: 2
+    experiment: credit-default
+    model_name: credit-default-model
+    endpoint_sku: Standard_D2as_v4

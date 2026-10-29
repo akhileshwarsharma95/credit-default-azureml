@@ -10,10 +10,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .config import load
 from .policy import GRADES, assign_grade
 
-PSI_WARN = 0.10
-PSI_ALERT = 0.25
+PSI_WARN = load()["business"]["monitoring"]["psi_warn"]
+PSI_ALERT = load()["business"]["monitoring"]["psi_alert"]
 _EPS = 1e-4
 
 

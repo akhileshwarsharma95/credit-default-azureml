@@ -7,10 +7,12 @@ import ast
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from conftest import ROOT, make_synthetic
 from creditrisk import drift, metrics, policy, quality
 from creditrisk.agent import SqlGuardError, guard_sql
+from creditrisk.config import load
 from creditrisk.features import ENGINEERED, FeatureEngineer
 from creditrisk.schema import RAW_FEATURES, _standardise_columns
 
@@ -140,3 +142,44 @@ def test_step_scripts_import_only_creditrisk_and_third_party():
         names = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
         assert not names & {"pipeline", "deploy", "azure_utils"}, script.name
+
+
+def test_config_drives_policy_and_monitoring_constants():
+    cfg = load()
+    assert policy.PD_FLOOR == cfg["business"]["pd_floor"] == 0.001
+    assert policy.cost_optimal_threshold(**cfg["business"]["costs"]) == pytest.approx(1 / 6)
+    assert [g for g, _, _ in policy.MASTER_SCALE] == [g for g, _, _ in cfg["business"]["master_scale"]]
+    assert (drift.PSI_WARN, drift.PSI_ALERT) == (0.10, 0.25)
+
+
+@pytest.mark.parametrize(
+    ("component", "name", "section", "key"),
+    [
+        ("train", "n_trials", "training", "n_trials"),
+        ("train", "cost_fn", "costs", "cost_fn"),
+        ("train", "cost_fp", "costs", "cost_fp"),
+        ("train", "lgd", "loss", "lgd"),
+        ("train", "ccf", "loss", "ccf"),
+        ("evaluate", "min_auc", "registration_gate", "min_auc"),
+        ("evaluate", "max_ece", "registration_gate", "max_ece"),
+        ("evaluate", "champion_tolerance", "registration_gate", "champion_tolerance"),
+        ("monitor_drift", "psi_warn", "monitoring", "psi_warn"),
+        ("monitor_drift", "psi_alert", "monitoring", "psi_alert"),
+        ("preprocess", "test_size", "data", "test_size"),
+    ],
+)
+def test_component_defaults_match_config(component, name, section, key):
+    # Azure ML passes component defaults to the steps, so they must not drift from config.yaml
+    cfg = load()
+    expected = (cfg["business"] | cfg["technical"])[section][key]
+    spec = yaml.safe_load((ROOT / "components" / f"{component}.yml").read_text())
+    assert spec["inputs"][name]["default"] == expected
+
+
+def test_cli_pipeline_defaults_match_config():
+    inputs = yaml.safe_load((ROOT / "pipeline" / "training_pipeline.yml").read_text())["inputs"]
+    cfg = load()
+    training, costs = cfg["technical"]["training"], cfg["business"]["costs"]
+    assert (inputs["n_trials"], inputs["exclude_sensitive"]) == (training["n_trials"], training["exclude_sensitive"])
+    assert (inputs["cost_fn"], inputs["cost_fp"]) == (costs["cost_fn"], costs["cost_fp"])
+    assert inputs["model_name"] == cfg["technical"]["azure"]["model_name"]

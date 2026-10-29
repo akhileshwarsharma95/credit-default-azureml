@@ -19,6 +19,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from creditrisk.config import load
 from pipeline.azure_utils import (
     COMPONENTS,
     DEFAULTS,
@@ -29,6 +30,9 @@ from pipeline.azure_utils import (
     git_sha,
     stream_and_check,
 )
+
+TRAINING = load()["technical"]["training"]
+COSTS = load()["business"]["costs"]
 
 
 def build_pipeline(raw_data, compute: str, args, data_version: str, sha: str):
@@ -113,12 +117,12 @@ def main() -> None:
     p.add_argument("--max-nodes", type=int, default=DEFAULTS["max_nodes"])
     p.add_argument("--experiment", default=DEFAULTS["experiment"])
     p.add_argument("--model-name", dest="model_name", default=DEFAULTS["model_name"])
-    p.add_argument("--n-trials", dest="n_trials", type=int, default=25)
+    p.add_argument("--n-trials", dest="n_trials", type=int, default=TRAINING["n_trials"])
     p.add_argument(
         "--include-sensitive", action="store_true", help="Use SEX, MARRIAGE, AGE as features (off by default)"
     )
-    p.add_argument("--cost-fn", dest="cost_fn", type=float, default=5.0)
-    p.add_argument("--cost-fp", dest="cost_fp", type=float, default=1.0)
+    p.add_argument("--cost-fn", dest="cost_fn", type=float, default=COSTS["cost_fn"])
+    p.add_argument("--cost-fp", dest="cost_fp", type=float, default=COSTS["cost_fp"])
     p.add_argument("--wait", action="store_true", help="Stream logs and fail if the pipeline fails")
     p.add_argument("--dry-run", action="store_true", help="Build the pipeline locally and print it; no Azure calls")
     p.add_argument("--schedule", help="Cron expression for a recurring retraining schedule, e.g. '0 6 1 * *'")

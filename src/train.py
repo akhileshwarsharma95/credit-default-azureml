@@ -26,8 +26,11 @@ from mlflow.models import infer_signature
 
 import creditrisk
 from creditrisk import drift, explain, metrics, modeling, policy
+from creditrisk.config import load
 from creditrisk.schema import TARGET, model_features, read_table
 from creditrisk.tracking import log_metrics, log_params, log_table, write_json
+
+TRAINING = load()["technical"]["training"]
 
 
 def str2bool(v) -> bool:
@@ -38,19 +41,31 @@ def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--train_data", required=True)
     p.add_argument("--model_output", required=True)
-    p.add_argument("--exclude_sensitive", type=str2bool, default=True, help="Drop SEX, MARRIAGE, AGE from the model")
     p.add_argument(
-        "--monotone", type=str2bool, default=True, help="Monotonic constraints on delinquency/limit features"
+        "--exclude_sensitive",
+        type=str2bool,
+        default=TRAINING["exclude_sensitive"],
+        help="Drop SEX, MARRIAGE, AGE from the model",
     )
-    p.add_argument("--n_trials", type=int, default=25, help="Optuna trials (0 = default hyperparameters)")
-    p.add_argument("--tuning_folds", type=int, default=3)
-    p.add_argument("--cv_folds", type=int, default=5)
-    p.add_argument("--calibration", choices=["isotonic", "sigmoid", "none"], default="isotonic")
-    p.add_argument("--cost_fn", type=float, default=5.0, help="Relative cost of a missed default")
-    p.add_argument("--cost_fp", type=float, default=1.0, help="Relative cost of a false alarm")
-    p.add_argument("--lgd", type=float, default=0.60)
-    p.add_argument("--ccf", type=float, default=0.50)
-    p.add_argument("--random_state", type=int, default=42)
+    p.add_argument(
+        "--monotone",
+        type=str2bool,
+        default=TRAINING["monotone"],
+        help="Monotonic constraints on delinquency/limit features",
+    )
+    p.add_argument(
+        "--n_trials", type=int, default=TRAINING["n_trials"], help="Optuna trials (0 = default hyperparameters)"
+    )
+    p.add_argument("--tuning_folds", type=int, default=TRAINING["tuning_folds"])
+    p.add_argument("--cv_folds", type=int, default=TRAINING["cv_folds"])
+    p.add_argument("--calibration", choices=["isotonic", "sigmoid", "none"], default=TRAINING["calibration"])
+    p.add_argument(
+        "--cost_fn", type=float, default=policy.Assumptions.cost_fn, help="Relative cost of a missed default"
+    )
+    p.add_argument("--cost_fp", type=float, default=policy.Assumptions.cost_fp, help="Relative cost of a false alarm")
+    p.add_argument("--lgd", type=float, default=policy.Assumptions.lgd)
+    p.add_argument("--ccf", type=float, default=policy.Assumptions.ccf)
+    p.add_argument("--random_state", type=int, default=load()["technical"]["data"]["random_state"])
     return p.parse_args(argv)
 
 

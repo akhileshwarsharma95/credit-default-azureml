@@ -96,7 +96,7 @@ def main() -> None:
     p.add_argument("--endpoint-name", default=default_endpoint_name())
     p.add_argument("--model-name", default=DEFAULTS["model_name"])
     p.add_argument("--model-version", default="latest")
-    p.add_argument("--instance-type", default=os.getenv("AZUREML_ENDPOINT_SKU", "Standard_DS2_v2"))
+    p.add_argument("--instance-type", default=DEFAULTS["endpoint_sku"])
     p.add_argument("--instance-count", type=int, default=1)
     p.add_argument(
         "--canary",

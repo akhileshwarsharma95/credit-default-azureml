@@ -12,30 +12,25 @@ from dataclasses import asdict, dataclass
 import numpy as np
 import pandas as pd
 
+from .config import load
+
+_BUSINESS = load()["business"]
+
 # Rating master scale: grade, lower PD bound (inclusive), upper bound (exclusive).
 # Calibrated to this portfolio's PD range so every grade holds a testable population.
-MASTER_SCALE = [
-    ("A", 0.00, 0.05),
-    ("B", 0.05, 0.08),
-    ("C", 0.08, 0.12),
-    ("D", 0.12, 0.20),
-    ("E", 0.20, 0.35),
-    ("F", 0.35, 0.55),
-    ("G", 0.55, 1.0001),
-]
-# PD floor: Basel III final reforms (CRR3) input floor for qualifying revolving retail exposures.
-PD_FLOOR = 0.001
+MASTER_SCALE = [(g, float(lo), float(hi)) for g, lo, hi in _BUSINESS["master_scale"]]
+PD_FLOOR = _BUSINESS["pd_floor"]
 GRADES = [g for g, _, _ in MASTER_SCALE]
 
 
 @dataclass
 class Assumptions:
-    lgd: float = 0.60  # loss given default, unsecured revolving exposure
-    ccf: float = 0.50  # credit conversion factor applied to the undrawn limit
-    cost_fn: float = 5.0  # relative cost of missing a defaulter
-    cost_fp: float = 1.0  # relative cost of acting on a good client (lost margin, friction)
-    lifetime_years: float = 3.0  # behavioural life for lifetime ECL (stage 2)
-    sicr_grades: tuple = ("F", "G")  # significant increase in credit risk proxy
+    lgd: float = _BUSINESS["loss"]["lgd"]
+    ccf: float = _BUSINESS["loss"]["ccf"]
+    cost_fn: float = _BUSINESS["costs"]["cost_fn"]
+    cost_fp: float = _BUSINESS["costs"]["cost_fp"]
+    lifetime_years: float = _BUSINESS["loss"]["lifetime_years"]
+    sicr_grades: tuple = tuple(_BUSINESS["sicr_grades"])
 
     def to_dict(self) -> dict:
         d = asdict(self)

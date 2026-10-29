@@ -14,6 +14,7 @@ import mlflow
 from sklearn.model_selection import train_test_split
 
 from creditrisk import quality
+from creditrisk.config import load
 from creditrisk.schema import TARGET, load_raw
 from creditrisk.tracking import log_metrics, log_params, write_json
 
@@ -21,8 +22,8 @@ from creditrisk.tracking import log_metrics, log_params, write_json
 def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--raw_data", required=True, help="Raw UCI file (.xls/.xlsx/.csv) or folder containing it")
-    p.add_argument("--test_size", type=float, default=0.2)
-    p.add_argument("--random_state", type=int, default=42)
+    p.add_argument("--test_size", type=float, default=load()["technical"]["data"]["test_size"])
+    p.add_argument("--random_state", type=int, default=load()["technical"]["data"]["random_state"])
     p.add_argument("--train_data", required=True, help="Output folder for train.csv")
     p.add_argument("--test_data", required=True, help="Output folder for test.csv")
     p.add_argument("--quality_report", required=True, help="Output folder for the data-quality report")

@@ -7,6 +7,8 @@ import os
 import subprocess
 from pathlib import Path
 
+from creditrisk.config import load
+
 ROOT = Path(__file__).resolve().parents[1]
 COMPONENTS = ROOT / "components"
 
@@ -24,12 +26,16 @@ def load_dotenv(path: Path = ROOT / ".env") -> None:
 
 load_dotenv()  # before DEFAULTS, so overrides such as AZUREML_VM_SIZE in .env take effect
 
+AZURE = load()["technical"]["azure"]
 DEFAULTS = {
-    "compute": os.getenv("AZUREML_COMPUTE", "cpu-cluster"),
-    "vm_size": os.getenv("AZUREML_VM_SIZE", "Standard_DS11_v2"),
-    "max_nodes": int(os.getenv("AZUREML_MAX_NODES", "2")),
-    "experiment": os.getenv("AZUREML_EXPERIMENT", "credit-default"),
-    "model_name": os.getenv("AZUREML_MODEL_NAME", "credit-default-model"),
+    "resource_group": os.getenv("AZURE_RESOURCE_GROUP", AZURE["resource_group"]),
+    "workspace": os.getenv("AZUREML_WORKSPACE", AZURE["workspace"]),
+    "compute": os.getenv("AZUREML_COMPUTE", AZURE["compute"]),
+    "vm_size": os.getenv("AZUREML_VM_SIZE", AZURE["vm_size"]),
+    "max_nodes": int(os.getenv("AZUREML_MAX_NODES", AZURE["max_nodes"])),
+    "experiment": os.getenv("AZUREML_EXPERIMENT", AZURE["experiment"]),
+    "model_name": os.getenv("AZUREML_MODEL_NAME", AZURE["model_name"]),
+    "endpoint_sku": os.getenv("AZUREML_ENDPOINT_SKU", AZURE["endpoint_sku"]),
     "raw_asset": "credit-default-raw",
 }
 
@@ -40,7 +46,7 @@ def get_ml_client():
 
     load_dotenv()
     credential = DefaultAzureCredential(exclude_interactive_browser_credential=False)
-    sub, rg, ws = (os.getenv(k) for k in ("AZURE_SUBSCRIPTION_ID", "AZURE_RESOURCE_GROUP", "AZUREML_WORKSPACE"))
+    sub, rg, ws = os.getenv("AZURE_SUBSCRIPTION_ID"), DEFAULTS["resource_group"], DEFAULTS["workspace"]
     if sub and rg and ws:
         return MLClient(credential, sub, rg, ws)
     return MLClient.from_config(credential=credential)  # falls back to config.json from the portal

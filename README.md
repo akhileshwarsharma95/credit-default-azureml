@@ -109,6 +109,7 @@ components/        7 Azure ML command components (YAML) - single source of truth
 pipeline/          SDK v2 submitters (training, batch monitoring, schedules) + CLI pipeline YAMLs
 src/               pipeline steps: preprocess, train, evaluate, register, score_batch, monitor_drift, portfolio_insights
 src/creditrisk/    shared library: schema, quality, features, modeling, explain, metrics, policy, drift, insights (+ sql/), agent, observability
+src/creditrisk/config.yaml   business (costs, LGD/CCF, PD floor, master scale, gate, monitoring thresholds) and technical (data, training, Azure) parameters
 src/serving/       online endpoint scoring script
 deploy/ monitoring/ infra/   endpoint (blue/green), Azure ML model monitor, workspace bootstrap + alerts
 app/ Dockerfile    Streamlit cockpit and its container
