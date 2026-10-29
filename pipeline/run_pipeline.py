@@ -152,7 +152,11 @@ def main() -> None:
         stream_and_check(ml_client, submitted)
         with tempfile.TemporaryDirectory() as tmp:
             try:
-                ml_client.jobs.download(submitted.name, output_name="model_info", download_path=tmp)
+                # Pipeline-level outputs have no path of their own, so download from the register step
+                register_job = next(
+                    j for j in ml_client.jobs.list(parent_job_name=submitted.name) if "register" in (j.display_name or "")
+                )
+                ml_client.jobs.download(register_job.name, output_name="model_info_output", download_path=tmp)
                 info_file = next(Path(tmp).rglob("model_info.json"))
                 info = json.loads(info_file.read_text())
                 print(f"Model info: {json.dumps(info, indent=2)}")

@@ -10,15 +10,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 COMPONENTS = ROOT / "components"
 
-DEFAULTS = {
-    "compute": os.getenv("AZUREML_COMPUTE", "cpu-cluster"),
-    "vm_size": os.getenv("AZUREML_VM_SIZE", "Standard_DS11_v2"),
-    "max_nodes": int(os.getenv("AZUREML_MAX_NODES", "2")),
-    "experiment": os.getenv("AZUREML_EXPERIMENT", "credit-default"),
-    "model_name": os.getenv("AZUREML_MODEL_NAME", "credit-default-model"),
-    "raw_asset": "credit-default-raw",
-}
-
 
 def load_dotenv(path: Path = ROOT / ".env") -> None:
     """Minimal .env loader (KEY=VALUE lines) so no extra dependency is needed."""
@@ -29,6 +20,18 @@ def load_dotenv(path: Path = ROOT / ".env") -> None:
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
             os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_dotenv()  # before DEFAULTS, so overrides such as AZUREML_VM_SIZE in .env take effect
+
+DEFAULTS = {
+    "compute": os.getenv("AZUREML_COMPUTE", "cpu-cluster"),
+    "vm_size": os.getenv("AZUREML_VM_SIZE", "Standard_DS11_v2"),
+    "max_nodes": int(os.getenv("AZUREML_MAX_NODES", "2")),
+    "experiment": os.getenv("AZUREML_EXPERIMENT", "credit-default"),
+    "model_name": os.getenv("AZUREML_MODEL_NAME", "credit-default-model"),
+    "raw_asset": "credit-default-raw",
+}
 
 
 def get_ml_client():
