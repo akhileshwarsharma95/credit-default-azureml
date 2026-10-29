@@ -1,0 +1,61 @@
+# CLI route - same components as pipeline/run_pipeline.py.
+#   az ml compute create -f infra/compute.yml
+#   az ml data create --name credit-default-raw --type uri_file --path data/raw/default_of_credit_card_clients.xls
+#   az ml job create -f pipeline/training_pipeline.yml --web
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: credit-default-training
+experiment_name: credit-default
+description: Data-quality gate, Optuna-tuned monotonic LightGBM vs scorecard, calibration, backtest, explainability, champion/challenger registration.
+settings:
+  default_compute: azureml:cpu-cluster
+  default_datastore: azureml:workspaceblobstore
+  continue_on_step_failure: false
+inputs:
+  raw_data:
+    type: uri_file
+    path: azureml:credit-default-raw@latest
+  model_name: credit-default-model
+  n_trials: 25
+  exclude_sensitive: true
+  cost_fn: 5.0
+  cost_fp: 1.0
+outputs:
+  model_info:
+    type: uri_folder
+jobs:
+  preprocess:
+    display_name: 1 - preprocess
+    type: command
+    component: ../components/preprocess.yml
+    inputs:
+      raw_data: ${{parent.inputs.raw_data}}
+  train:
+    display_name: 2 - train
+    type: command
+    component: ../components/train.yml
+    inputs:
+      train_data: ${{parent.jobs.preprocess.outputs.train_data}}
+      n_trials: ${{parent.inputs.n_trials}}
+      exclude_sensitive: ${{parent.inputs.exclude_sensitive}}
+      cost_fn: ${{parent.inputs.cost_fn}}
+      cost_fp: ${{parent.inputs.cost_fp}}
+  evaluate:
+    display_name: 3 - evaluate
+    type: command
+    component: ../components/evaluate.yml
+    inputs:
+      model_input: ${{parent.jobs.train.outputs.model_output}}
+      test_data: ${{parent.jobs.preprocess.outputs.test_data}}
+      model_name: ${{parent.inputs.model_name}}
+  register:
+    display_name: 4 - register
+    type: command
+    component: ../components/register.yml
+    inputs:
+      model_input: ${{parent.jobs.train.outputs.model_output}}
+      evaluation_output: ${{parent.jobs.evaluate.outputs.evaluation_output}}
+      model_name: ${{parent.inputs.model_name}}
+      data_version: credit-default-raw@latest
+    outputs:
+      model_info_output: ${{parent.outputs.model_info}}

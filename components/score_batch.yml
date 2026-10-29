@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: credit_default_score_batch
+display_name: Batch score portfolio
+description: PD, grade, action, reason codes, EAD/EL, IFRS 9 stage, early-warning triggers and limit recommendations for a portfolio snapshot.
+inputs:
+  model_input:
+    type: mlflow_model
+  scoring_data:
+    type: uri_file
+outputs:
+  scored_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python score_batch.py
+  --model_input ${{inputs.model_input}}
+  --scoring_data ${{inputs.scoring_data}}
+  --scored_output ${{outputs.scored_output}}

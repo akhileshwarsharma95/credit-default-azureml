@@ -1,0 +1,39 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+is_deterministic: false  # depends on registry state - never reuse a cached result
+name: credit_default_register
+display_name: 4 - Register model (gated)
+description: Registers the model package (model, drift reference, evaluation evidence, model card) in the workspace registry only if the quality gate passed.
+inputs:
+  model_input:
+    type: mlflow_model
+  evaluation_output:
+    type: uri_folder
+  model_name:
+    type: string
+    default: credit-default-model
+  git_sha:
+    type: string
+    default: unknown
+  data_version:
+    type: string
+    default: unknown
+  force:
+    type: boolean
+    default: false
+outputs:
+  model_info_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python register.py
+  --model_input ${{inputs.model_input}}
+  --evaluation_output ${{inputs.evaluation_output}}
+  --model_name ${{inputs.model_name}}
+  --model_info_output ${{outputs.model_info_output}}
+  --git_sha ${{inputs.git_sha}}
+  --data_version ${{inputs.data_version}}
+  --force ${{inputs.force}}

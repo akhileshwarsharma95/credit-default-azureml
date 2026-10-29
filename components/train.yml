@@ -1,0 +1,63 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: credit_default_train
+display_name: 2 - Train, select and calibrate
+description: Optuna-tuned monotonic LightGBM vs. logistic scorecard (out-of-fold), calibrated refit, cost-optimal cut-off, drift reference profile. Outputs one self-contained MLflow model.
+inputs:
+  train_data:
+    type: uri_folder
+  exclude_sensitive:
+    type: boolean
+    default: true
+  monotone:
+    type: boolean
+    default: true
+  n_trials:
+    type: integer
+    default: 25
+  tuning_folds:
+    type: integer
+    default: 3
+  cv_folds:
+    type: integer
+    default: 5
+  calibration:
+    type: string
+    default: isotonic
+  cost_fn:
+    type: number
+    default: 5.0
+  cost_fp:
+    type: number
+    default: 1.0
+  lgd:
+    type: number
+    default: 0.6
+  ccf:
+    type: number
+    default: 0.5
+  random_state:
+    type: integer
+    default: 42
+outputs:
+  model_output:
+    type: mlflow_model
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python train.py
+  --train_data ${{inputs.train_data}}
+  --model_output ${{outputs.model_output}}
+  --exclude_sensitive ${{inputs.exclude_sensitive}}
+  --monotone ${{inputs.monotone}}
+  --n_trials ${{inputs.n_trials}}
+  --tuning_folds ${{inputs.tuning_folds}}
+  --cv_folds ${{inputs.cv_folds}}
+  --calibration ${{inputs.calibration}}
+  --cost_fn ${{inputs.cost_fn}}
+  --cost_fp ${{inputs.cost_fp}}
+  --lgd ${{inputs.lgd}}
+  --ccf ${{inputs.ccf}}
+  --random_state ${{inputs.random_state}}

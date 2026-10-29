@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv*/
+.env
+config.json
+data/raw/*
+data/batches/*
+!data/raw/.gitkeep
+outputs/
+mlruns/
+mlflow.db
+app/model/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.claude/
+docs/PRESENTATION.md

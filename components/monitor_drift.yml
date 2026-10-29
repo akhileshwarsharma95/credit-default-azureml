@@ -1,0 +1,30 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: credit_default_monitor_drift
+display_name: Monitor drift and performance
+description: PSI per feature, score and rating grade against the reference profile in the model package; realised performance and backtest when outcomes are present; writes alert.json.
+inputs:
+  model_input:
+    type: mlflow_model
+  scored_data:
+    type: uri_folder
+  psi_warn:
+    type: number
+    default: 0.1
+  psi_alert:
+    type: number
+    default: 0.25
+outputs:
+  monitoring_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python monitor_drift.py
+  --model_input ${{inputs.model_input}}
+  --scored_data ${{inputs.scored_data}}
+  --monitoring_output ${{outputs.monitoring_output}}
+  --psi_warn ${{inputs.psi_warn}}
+  --psi_alert ${{inputs.psi_alert}}

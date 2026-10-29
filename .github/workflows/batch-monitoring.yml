@@ -1,0 +1,33 @@
+name: batch-scoring-and-monitoring
+on:
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: Demo batch to score
+        type: choice
+        options: [portfolio_downturn, portfolio_stable]
+        default: portfolio_downturn
+permissions:
+  id-token: write
+  contents: read
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZUREML_WORKSPACE: ${{ vars.AZUREML_WORKSPACE }}
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: pip install -r requirements.txt
+      - run: python scripts/download_data.py && python scripts/make_batches.py
+      - run: python pipeline/run_batch_pipeline.py --batch "data/batches/${{ inputs.batch }}.csv" --wait

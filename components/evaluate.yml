@@ -1,0 +1,47 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+is_deterministic: false  # depends on registry state - never reuse a cached result
+name: credit_default_evaluate
+display_name: 3 - Evaluate, backtest, explain
+description: Test-set discrimination with bootstrap CIs, calibration, PD backtest per grade (Jeffreys), fairness, SHAP and reason codes; scores the registered champion on the same data and writes the quality-gate decision.
+inputs:
+  model_input:
+    type: mlflow_model
+  test_data:
+    type: uri_folder
+  model_name:
+    type: string
+    default: credit-default-model
+  min_auc:
+    type: number
+    default: 0.70
+  max_ece:
+    type: number
+    default: 0.05
+  champion_tolerance:
+    type: number
+    default: 0.005
+  n_bootstrap:
+    type: integer
+    default: 500
+  random_state:
+    type: integer
+    default: 42
+outputs:
+  evaluation_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python evaluate.py
+  --model_input ${{inputs.model_input}}
+  --test_data ${{inputs.test_data}}
+  --evaluation_output ${{outputs.evaluation_output}}
+  --model_name ${{inputs.model_name}}
+  --min_auc ${{inputs.min_auc}}
+  --max_ece ${{inputs.max_ece}}
+  --champion_tolerance ${{inputs.champion_tolerance}}
+  --n_bootstrap ${{inputs.n_bootstrap}}
+  --random_state ${{inputs.random_state}}

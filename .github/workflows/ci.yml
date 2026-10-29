@@ -1,0 +1,29 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Install locked dependencies
+        run: pip install -r requirements.txt
+      - name: Lint
+        run: ruff check .
+      - name: Tests (unit + end-to-end pipeline on synthetic data, local MLflow registry)
+        run: pytest -q
+      - name: Validate Azure ML specs (pipelines, endpoint, monitor) - no Azure access needed
+        run: |
+          python pipeline/run_pipeline.py --dry-run > /dev/null
+          python pipeline/run_batch_pipeline.py --dry-run > /dev/null
+          python deploy/deploy_endpoint.py --dry-run > /dev/null
+          python monitoring/setup_model_monitor.py --dry-run > /dev/null

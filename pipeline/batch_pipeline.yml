@@ -1,0 +1,35 @@
+# CLI route for batch scoring + monitoring.
+#   az ml data create --name credit-default-batch --type uri_file --path data/batches/portfolio_downturn.csv
+#   az ml job create -f pipeline/batch_pipeline.yml --set inputs.model.path=azureml:credit-default-model:1
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: credit-default-batch-scoring-and-monitoring
+experiment_name: credit-default-monitoring
+settings:
+  default_compute: azureml:cpu-cluster
+  default_datastore: azureml:workspaceblobstore
+inputs:
+  model:
+    type: mlflow_model
+    path: azureml:credit-default-model:1
+  scoring_data:
+    type: uri_file
+    path: azureml:credit-default-batch@latest
+jobs:
+  score:
+    type: command
+    component: ../components/score_batch.yml
+    inputs:
+      model_input: ${{parent.inputs.model}}
+      scoring_data: ${{parent.inputs.scoring_data}}
+  monitor:
+    type: command
+    component: ../components/monitor_drift.yml
+    inputs:
+      model_input: ${{parent.inputs.model}}
+      scored_data: ${{parent.jobs.score.outputs.scored_output}}
+  insights:
+    type: command
+    component: ../components/portfolio_insights.yml
+    inputs:
+      scored_data: ${{parent.jobs.score.outputs.scored_output}}

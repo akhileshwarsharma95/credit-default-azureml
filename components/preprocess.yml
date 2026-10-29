@@ -1,0 +1,34 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: credit_default_preprocess
+display_name: 1 - Preprocess and data-quality gate
+description: Load the raw UCI file, run pandera data-quality checks (hard checks fail the run), clean, and make a stratified train/test split.
+inputs:
+  raw_data:
+    type: uri_file
+    description: Raw UCI file (.xls/.xlsx/.csv)
+  test_size:
+    type: number
+    default: 0.2
+  random_state:
+    type: integer
+    default: 42
+outputs:
+  train_data:
+    type: uri_folder
+  test_data:
+    type: uri_folder
+  quality_report:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python preprocess.py
+  --raw_data ${{inputs.raw_data}}
+  --test_size ${{inputs.test_size}}
+  --random_state ${{inputs.random_state}}
+  --train_data ${{outputs.train_data}}
+  --test_data ${{outputs.test_data}}
+  --quality_report ${{outputs.quality_report}}

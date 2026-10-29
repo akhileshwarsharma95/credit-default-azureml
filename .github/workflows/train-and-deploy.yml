@@ -1,0 +1,82 @@
+name: train-and-deploy
+on:
+  push:
+    branches: [main]
+    paths: ["src/**", "components/**", "pipeline/**", "environments/**"]
+  workflow_dispatch:
+    inputs:
+      n_trials:
+        description: Optuna trials
+        default: "25"
+      deploy:
+        description: Deploy the newly registered model to the online endpoint
+        type: boolean
+        default: false
+permissions:
+  id-token: write   # OIDC login to Azure, no stored credentials
+  contents: read
+concurrency:
+  group: train-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZUREML_WORKSPACE: ${{ vars.AZUREML_WORKSPACE }}
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  train:
+    needs: ci
+    runs-on: ubuntu-latest
+    outputs:
+      registered: ${{ steps.info.outputs.registered }}
+      version: ${{ steps.info.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: pip install -r requirements.txt
+      - name: Get raw data (UCI)
+        run: python scripts/download_data.py
+      - name: Submit Azure ML training pipeline and wait
+        run: python pipeline/run_pipeline.py --wait --n-trials "${{ inputs.n_trials || '25' }}"
+      - id: info
+        name: Read registration result
+        run: |
+          python - >> "$GITHUB_OUTPUT" <<'PY'
+          import json
+          info = json.load(open("outputs/last_model_info.json"))
+          print(f"registered={str(info.get('registered', False)).lower()}")
+          print(f"version={info.get('version', '')}")
+          PY
+      - name: Model card to job summary
+        if: always()
+        run: cat outputs/MODEL_CARD.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "No model card (model not registered)" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: train
+    if: needs.train.outputs.registered == 'true' && github.event_name == 'workflow_dispatch' && inputs.deploy
+    environment: production   # add required reviewers in GitHub -> Settings -> Environments for an approval gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: pip install -r requirements.txt
+      - name: Blue/green deployment with smoke test
+        run: python deploy/deploy_endpoint.py --model-version "${{ needs.train.outputs.version }}"

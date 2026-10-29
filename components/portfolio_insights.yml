@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: credit_default_portfolio_insights
+display_name: Portfolio insights (SQL)
+description: DuckDB SQL analytics - KPIs, grade/stage/segment views, early-warning watchlist, limit steering, roll rates and delinquency projection. Power BI-ready tables.
+inputs:
+  scored_data:
+    type: uri_folder
+  n_segments:
+    type: integer
+    default: 5
+  top_n:
+    type: integer
+    default: 50
+outputs:
+  insights_output:
+    type: uri_folder
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: ../environments/conda.yaml
+command: >-
+  python portfolio_insights.py
+  --scored_data ${{inputs.scored_data}}
+  --insights_output ${{outputs.insights_output}}
+  --n_segments ${{inputs.n_segments}}
+  --top_n ${{inputs.top_n}}
