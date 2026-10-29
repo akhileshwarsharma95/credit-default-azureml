@@ -15,6 +15,7 @@ from pathlib import Path
 
 import mlflow
 import pandas as pd
+from mlflow.exceptions import MlflowException
 from mlflow.tracking import MlflowClient
 
 from creditrisk import model_card
@@ -102,7 +103,7 @@ def main(argv=None) -> None:
         for k, v in tags.items():
             try:
                 client.set_model_version_tag(args.model_name, mv.version, k, v)
-            except Exception as exc:  # noqa: BLE001 - tags are metadata, never block registration
+            except MlflowException as exc:  # tags are metadata, never block registration
                 LOGGER.warning(f"Could not set tag {k}: {exc}")
         try:
             client.update_model_version(
@@ -110,7 +111,7 @@ def main(argv=None) -> None:
                 mv.version,
                 description=f"PD model ({summary['model_family']}), test AUC {m['auc']:.3f}",
             )
-        except Exception as exc:  # noqa: BLE001
+        except MlflowException as exc:
             LOGGER.warning(f"Could not set description: {exc}")
 
         info = {

@@ -49,7 +49,8 @@ def champion_auc(model_name: str, test: pd.DataFrame, y: pd.Series) -> dict:
     """Score the latest registered version (the champion) on the same test set."""
     try:
         versions = MlflowClient().search_model_versions(f"name='{model_name}'")
-    except Exception as exc:  # noqa: BLE001 - registry unavailable is not fatal
+    except Exception as exc:  # noqa: BLE001 - the comparison is advisory; an unreachable registry must not stop evaluation
+        LOGGER.warning(f"Champion comparison skipped, registry unavailable: {exc}")
         return {"status": f"skipped: {exc.__class__.__name__}"}
     if not versions:
         return {"status": "no champion yet"}
@@ -59,7 +60,8 @@ def champion_auc(model_name: str, test: pd.DataFrame, y: pd.Series) -> dict:
         cols = list(unwrap_base(champ).named_steps["features"].feature_names_in_)
         auc = metrics.discrimination(y, champ.predict_proba(test[cols])[:, 1])["auc"]
         return {"status": "compared", "version": str(latest.version), "auc": float(auc)}
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001 - an older champion may not load or score with today's features
+        LOGGER.warning(f"Champion v{latest.version} could not be scored: {exc}")
         return {"status": f"skipped: could not score champion v{latest.version} ({exc.__class__.__name__})"}
 
 

@@ -49,7 +49,7 @@ def main() -> None:
     if args.source == "uci":
         try:
             path = from_uci(dest)
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, zipfile.BadZipFile, StopIteration) as exc:  # network error or unexpected archive
             LOGGER.warning(f"UCI download failed ({exc}); using GitHub mirror")
             path = from_mirror(dest)
     else:

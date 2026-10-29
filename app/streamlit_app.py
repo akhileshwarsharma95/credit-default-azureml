@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -413,7 +414,7 @@ with tab_client:
             with urllib.request.urlopen(req, timeout=20) as r:
                 remote = json.loads(r.read())
             remote["roundtrip_ms"] = round((time.perf_counter() - t0) * 1000)
-        except Exception as exc:  # noqa: BLE001
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             st.error(f"Endpoint call failed: {exc}")
 
     k = st.columns(5)

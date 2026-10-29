@@ -112,6 +112,29 @@ def find_raw_file(path: str | None) -> Path:
     return files[0]
 
 
+def save_registration_result(ml_client, pipeline_name: str) -> None:
+    """Copy the register step's model_info.json and model card to outputs/ (the CI workflow reads them)."""
+    register_job = next(
+        (j for j in ml_client.jobs.list(parent_job_name=pipeline_name) if "register" in (j.display_name or "")), None
+    )
+    if register_job is None:
+        raise SystemExit(f"Pipeline {pipeline_name} has no register step")
+    out = ROOT / "outputs"
+    out.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        # Pipeline-level outputs have no path of their own, so download from the register step
+        ml_client.jobs.download(register_job.name, output_name="model_info_output", download_path=tmp)
+        info_file = next(Path(tmp).rglob("model_info.json"), None)
+        if info_file is None:
+            raise SystemExit(f"Register step {register_job.name} produced no model_info.json")
+        info = json.loads(info_file.read_text())
+        (out / "last_model_info.json").write_text(json.dumps(info, indent=2))
+        card = next(Path(tmp).rglob("MODEL_CARD.md"), None)
+        if card:
+            (out / "MODEL_CARD.md").write_text(card.read_text())
+    LOGGER.info(f"Model info: {json.dumps(info, indent=2)}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--raw-file", help="Local raw file to register (default: data/raw/*, downloaded if missing)")
@@ -181,25 +204,7 @@ def main() -> None:
     LOGGER.info(f"Submitted pipeline {submitted.name}\nStudio: {submitted.studio_url}")
     if args.wait:
         stream_and_check(ml_client, submitted)
-        with tempfile.TemporaryDirectory() as tmp:
-            try:
-                # Pipeline-level outputs have no path of their own, so download from the register step
-                register_job = next(
-                    j
-                    for j in ml_client.jobs.list(parent_job_name=submitted.name)
-                    if "register" in (j.display_name or "")
-                )
-                ml_client.jobs.download(register_job.name, output_name="model_info_output", download_path=tmp)
-                info_file = next(Path(tmp).rglob("model_info.json"))
-                info = json.loads(info_file.read_text())
-                LOGGER.info(f"Model info: {json.dumps(info, indent=2)}")
-                Path(ROOT / "outputs").mkdir(exist_ok=True)
-                (ROOT / "outputs" / "last_model_info.json").write_text(json.dumps(info, indent=2))
-                card = next(Path(tmp).rglob("MODEL_CARD.md"), None)
-                if card:
-                    (ROOT / "outputs" / "MODEL_CARD.md").write_text(card.read_text())
-            except Exception as exc:  # noqa: BLE001
-                LOGGER.warning(f"Could not download model_info output: {exc}")
+        save_registration_result(ml_client, submitted.name)
 
 
 if __name__ == "__main__":

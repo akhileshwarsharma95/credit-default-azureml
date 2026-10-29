@@ -18,6 +18,7 @@ import re
 import time
 from dataclasses import dataclass, field
 
+import duckdb
 import pandas as pd
 
 from .observability import tracer
@@ -222,7 +223,7 @@ class PortfolioAgent:
         start = time.perf_counter()
         try:
             df = self.run_sql(query)
-        except Exception as exc:  # noqa: BLE001
+        except (SqlGuardError, duckdb.Error) as exc:
             return AgentResult(answer=f"Query failed: {exc}", mode="offline", queries=[query])
         step = Step("tool", "run_sql", query, round((time.perf_counter() - start) * 1000, 1))
         answer = f"**{title}** ({len(df)} row{'s' if len(df) != 1 else ''}). Offline template - configure an LLM for free-form questions."
@@ -268,7 +269,11 @@ class PortfolioAgent:
                     result.tables.append(df)
                     content = df.head(50).to_json(orient="records", date_format="iso", double_precision=4)
                     detail = query
-                except Exception as exc:  # noqa: BLE001 - errors go back to the model so it can fix its SQL
+                except (
+                    SqlGuardError,
+                    duckdb.Error,
+                    json.JSONDecodeError,
+                ) as exc:  # back to the model so it can fix its SQL
                     content = json.dumps({"error": str(exc)})
                     detail = f"ERROR: {exc}"
                 result.steps.append(Step("tool", "run_sql", detail, round((time.perf_counter() - start) * 1000, 1)))

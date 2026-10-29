@@ -238,6 +238,8 @@ def test_endpoint_scoring_script(pipeline_run, monkeypatch):
     split = {"input_data": {"columns": list(test.columns), "data": test.values.tolist()}}
     assert len(score.run(json.dumps(split))["predictions"]) == 3
     assert "error" in score.run(json.dumps({"clients": [{"LIMIT_BAL": 1}]}))
+    row = test.drop(columns=["default"]).to_dict(orient="records")[0]
+    assert "error" in score.run(json.dumps({"clients": [{**row, "LIMIT_BAL": "abc"}]}))
 
 
 def test_agent_offline_answers(pipeline_run):
@@ -264,6 +266,7 @@ def test_agent_offline_answers(pipeline_run):
     ]:
         r = agent.ask(q)
         assert r.tables and len(r.tables[0]) > 0, q
+    assert agent._offline_answer("t", "DROP TABLE portfolio").answer.startswith("Query failed")
 
 
 def test_streamlit_app_renders(pipeline_run, monkeypatch):

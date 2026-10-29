@@ -90,12 +90,12 @@ def ensure_data_asset(ml_client, name: str, path: Path, description: str, extra_
     """Register a file as a versioned uri_file data asset; reuse the version if the content hash is unchanged."""
     from azure.ai.ml.constants import AssetTypes
     from azure.ai.ml.entities import Data
+    from azure.core.exceptions import ResourceNotFoundError
 
     digest = sha256(path)
-    existing = []
     try:
         existing = list(ml_client.data.list(name=name))
-    except Exception:  # noqa: BLE001 - first registration
+    except ResourceNotFoundError:  # first registration of this asset name
         existing = []
     for asset in existing:
         if (asset.tags or {}).get("sha256") == digest:
@@ -132,7 +132,7 @@ def git_sha() -> str:
         return subprocess.check_output(
             ["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
         ).strip()
-    except Exception:  # noqa: BLE001
+    except (subprocess.CalledProcessError, FileNotFoundError):  # not a git checkout, or git not installed
         return "unknown"
 
 

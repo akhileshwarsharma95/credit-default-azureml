@@ -101,7 +101,7 @@ def run(raw_data):
         if missing:
             return _bad_request(f"missing fields: {missing}", required_fields=PKG.features)
         df[PKG.features] = df[PKG.features].apply(pd.to_numeric, errors="raise")
-    except Exception as exc:  # noqa: BLE001
+    except (ValueError, KeyError, TypeError) as exc:  # malformed JSON, unknown layout or non-numeric fields
         LOGGER.warning("bad request: %s", exc)
         return _bad_request(f"invalid request: {exc}")
 

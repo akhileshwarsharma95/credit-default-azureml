@@ -17,6 +17,10 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from sklearn.metrics import precision_recall_curve, roc_curve
 
+from .observability import get_logger
+
+LOGGER = get_logger("plots")
+
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
 INK2 = "#52514e"
@@ -338,7 +342,8 @@ def shap_beeswarm(contrib: pd.DataFrame, features: pd.DataFrame, max_display: in
         fig.set_facecolor(SURFACE)
         plt.title("SHAP summary (log-odds contribution per client)", loc="left", fontsize=12)
         return fig
-    except Exception:  # noqa: BLE001 - shap is only needed for this optional visual
+    except Exception as exc:  # noqa: BLE001 - optional visual; a plotting failure must not stop evaluation
+        LOGGER.warning(f"SHAP summary plot skipped: {exc}")
         return None
 
 
