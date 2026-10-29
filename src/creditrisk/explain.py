@@ -103,7 +103,9 @@ def reason_text(feature: str, value, medians: dict | None = None) -> str:
         "n_no_consumption": lambda: f"Card unused in {int(v)} of the last 6 months",
         "n_paid_full": lambda: "Rarely pays the full balance",
         "months_since_delay": lambda: (
-            f"Most recent late payment {int(v)} month{'s' if int(v) != 1 else ''} ago" if int(v) <= 6 else "No recent late payment"
+            f"Most recent late payment {int(v)} month{'s' if int(v) != 1 else ''} ago"
+            if int(v) <= 6
+            else "No recent late payment"
         ),
         "EDUCATION": lambda: f"Education: {EDUCATION_LABELS.get(int(v), v)}",
         "MARRIAGE": lambda: f"Marital status: {MARRIAGE_LABELS.get(int(v), v)}",
@@ -153,7 +155,12 @@ def mitigating_factors(contrib: pd.DataFrame, features: pd.DataFrame, top_n: int
     order = np.argsort(values, axis=1)[:, :top_n]
     return [
         [
-            {"feature": cols[j], "description": describe(cols[j]), "value": features.iloc[i][cols[j]], "contribution": round(float(values[i, j]), 4)}
+            {
+                "feature": cols[j],
+                "description": describe(cols[j]),
+                "value": features.iloc[i][cols[j]],
+                "contribution": round(float(values[i, j]), 4),
+            }
             for j in order[i]
             if values[i, j] < 0
         ]
@@ -163,4 +170,6 @@ def mitigating_factors(contrib: pd.DataFrame, features: pd.DataFrame, top_n: int
 
 def global_importance(contrib: pd.DataFrame) -> pd.DataFrame:
     imp = contrib.abs().mean().sort_values(ascending=False)
-    return pd.DataFrame({"feature": imp.index, "description": [describe(f) for f in imp.index], "mean_abs_shap": imp.values})
+    return pd.DataFrame(
+        {"feature": imp.index, "description": [describe(f) for f in imp.index], "mean_abs_shap": imp.values}
+    )

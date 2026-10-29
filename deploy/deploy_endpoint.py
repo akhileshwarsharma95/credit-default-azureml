@@ -51,7 +51,10 @@ def build_deployment(name: str, endpoint: str, model_id: str, instance_type: str
     )
     collector = (
         DataCollector(
-            collections={"model_inputs": DeploymentCollection(enabled="true"), "model_outputs": DeploymentCollection(enabled="true")},
+            collections={
+                "model_inputs": DeploymentCollection(enabled="true"),
+                "model_outputs": DeploymentCollection(enabled="true"),
+            },
             sampling_rate=1.0,
         )
         if collect
@@ -74,7 +77,9 @@ def build_deployment(name: str, endpoint: str, model_id: str, instance_type: str
 
 
 def smoke_test(ml_client, endpoint: str, deployment: str) -> None:
-    raw = ml_client.online_endpoints.invoke(endpoint_name=endpoint, deployment_name=deployment, request_file=str(ROOT / "deploy" / "sample_request.json"))
+    raw = ml_client.online_endpoints.invoke(
+        endpoint_name=endpoint, deployment_name=deployment, request_file=str(ROOT / "deploy" / "sample_request.json")
+    )
     body = json.loads(raw)
     if isinstance(body, str):
         body = json.loads(body)
@@ -92,7 +97,12 @@ def main() -> None:
     p.add_argument("--model-version", default="latest")
     p.add_argument("--instance-type", default=os.getenv("AZUREML_ENDPOINT_SKU", "Standard_DS2_v2"))
     p.add_argument("--instance-count", type=int, default=1)
-    p.add_argument("--canary", type=int, default=0, help="Percent of traffic for the new deployment (0 = full switch after smoke test)")
+    p.add_argument(
+        "--canary",
+        type=int,
+        default=0,
+        help="Percent of traffic for the new deployment (0 = full switch after smoke test)",
+    )
     p.add_argument("--keep-old", action="store_true", help="Keep the previous deployment after switching traffic")
     p.add_argument("--no-data-collection", action="store_true")
     p.add_argument("--rollback", action="store_true")
@@ -101,7 +111,14 @@ def main() -> None:
     args = p.parse_args()
 
     if args.dry_run:
-        dep = build_deployment("blue", args.endpoint_name, f"azureml:{args.model_name}:1", args.instance_type, args.instance_count, not args.no_data_collection)
+        dep = build_deployment(
+            "blue",
+            args.endpoint_name,
+            f"azureml:{args.model_name}:1",
+            args.instance_type,
+            args.instance_count,
+            not args.no_data_collection,
+        )
         with tempfile.TemporaryDirectory() as tmp:
             dep.dump(Path(tmp) / "deployment.yml")
             print((Path(tmp) / "deployment.yml").read_text())
@@ -126,7 +143,12 @@ def main() -> None:
             raise SystemExit("Nothing to roll back") from None
         print(f"Creating endpoint {name} ...")
         endpoint = ml_client.online_endpoints.begin_create_or_update(
-            ManagedOnlineEndpoint(name=name, auth_mode="key", description="Credit default PD scoring with reason codes", tags={"app": "credit-risk"})
+            ManagedOnlineEndpoint(
+                name=name,
+                auth_mode="key",
+                description="Credit default PD scoring with reason codes",
+                tags={"app": "credit-risk"},
+            )
         ).result()
 
     traffic = dict(endpoint.traffic or {})
@@ -146,7 +168,9 @@ def main() -> None:
     new = "green" if live == "blue" else "blue"
     if new in existing and new != live:
         ml_client.online_deployments.begin_delete(name=new, endpoint_name=name).result()
-    print(f"Deploying {model.name}:{model.version} as '{new}' on {args.instance_type} x{args.instance_count} (takes ~10-15 min) ...")
+    print(
+        f"Deploying {model.name}:{model.version} as '{new}' on {args.instance_type} x{args.instance_count} (takes ~10-15 min) ..."
+    )
     dep = build_deployment(new, name, model.id, args.instance_type, args.instance_count, not args.no_data_collection)
     ml_client.online_deployments.begin_create_or_update(dep).result()
 

@@ -39,7 +39,9 @@ def parse_args(argv=None):
     p.add_argument("--train_data", required=True)
     p.add_argument("--model_output", required=True)
     p.add_argument("--exclude_sensitive", type=str2bool, default=True, help="Drop SEX, MARRIAGE, AGE from the model")
-    p.add_argument("--monotone", type=str2bool, default=True, help="Monotonic constraints on delinquency/limit features")
+    p.add_argument(
+        "--monotone", type=str2bool, default=True, help="Monotonic constraints on delinquency/limit features"
+    )
     p.add_argument("--n_trials", type=int, default=25, help="Optuna trials (0 = default hyperparameters)")
     p.add_argument("--tuning_folds", type=int, default=3)
     p.add_argument("--cv_folds", type=int, default=5)
@@ -62,7 +64,9 @@ def main(argv=None) -> None:
         mlflow.set_tags({"stage": "train", "model_type": "pd_scorecard"})
 
         # 1. Hyperparameter search
-        best_params, trials = modeling.tune_lgbm(X, y, features, args.n_trials, args.tuning_folds, args.random_state, args.monotone)
+        best_params, trials = modeling.tune_lgbm(
+            X, y, features, args.n_trials, args.tuning_folds, args.random_state, args.monotone
+        )
         if not trials.empty:
             log_table(trials, "tuning/optuna_trials.csv")
             mlflow.log_metric("optuna_best_cv_auc", float(trials["value"].max()))
@@ -74,12 +78,23 @@ def main(argv=None) -> None:
             lgbm_name: modeling.build_lgbm(features, best_params, args.monotone, args.random_state),
             "logistic_scorecard": modeling.build_logreg(features),
         }
-        sensitivity = {"lightgbm_unconstrained": modeling.build_lgbm(features, best_params, False, args.random_state)} if args.monotone else {}
+        sensitivity = (
+            {"lightgbm_unconstrained": modeling.build_lgbm(features, best_params, False, args.random_state)}
+            if args.monotone
+            else {}
+        )
         rows, oof = [], {}
         for name, model in {**selectable, **sensitivity}.items():
             oof[name] = modeling.oof_proba(model, X, y, args.cv_folds, args.random_state)
             d = metrics.discrimination(y, oof[name])
-            rows.append({"candidate": name, "selectable": name in selectable, **d, "brier": float(np.mean((oof[name] - y) ** 2))})
+            rows.append(
+                {
+                    "candidate": name,
+                    "selectable": name in selectable,
+                    **d,
+                    "brier": float(np.mean((oof[name] - y) ** 2)),
+                }
+            )
             log_metrics(d, prefix=f"cv_{name}_")
         comparison = pd.DataFrame(rows).sort_values("auc", ascending=False)
         log_table(comparison, "model_selection/candidate_comparison.csv")
@@ -88,10 +103,17 @@ def main(argv=None) -> None:
         print(f"Selected: {best_name}")
 
         # 3. Calibrated refit on the full training set
-        calibrated = modeling.calibrate(selectable[best_name], args.calibration, args.cv_folds, args.random_state).fit(X, y)
+        calibrated = modeling.calibrate(selectable[best_name], args.calibration, args.cv_folds, args.random_state).fit(
+            X, y
+        )
         final = modeling.FlooredPD.wrap(calibrated, policy.PD_FLOOR)
-        pd_train = np.clip(modeling.oof_calibrated_pd(calibrated, selectable[best_name], X, y, oof[best_name], args.cv_folds, args.random_state),
-                           policy.PD_FLOOR, 1 - policy.PD_FLOOR)
+        pd_train = np.clip(
+            modeling.oof_calibrated_pd(
+                calibrated, selectable[best_name], X, y, oof[best_name], args.cv_folds, args.random_state
+            ),
+            policy.PD_FLOOR,
+            1 - policy.PD_FLOOR,
+        )
 
         # 4. Cut-off from cost assumptions (valid because PDs are calibrated)
         threshold = policy.cost_optimal_threshold(args.cost_fn, args.cost_fp)
@@ -124,7 +146,9 @@ def main(argv=None) -> None:
         )
         feats = explain.feature_frame(final, X)
         write_json(drift.build_profile(feats, pd_train), out / "reference" / "reference_profile.json")
-        X.sample(n=min(500, len(X)), random_state=args.random_state).to_csv(out / "reference" / "background.csv", index=False)
+        X.sample(n=min(500, len(X)), random_state=args.random_state).to_csv(
+            out / "reference" / "background.csv", index=False
+        )
 
         selected = comparison.set_index("candidate").loc[best_name]
         summary = {
@@ -138,7 +162,12 @@ def main(argv=None) -> None:
             "candidates": comparison.to_dict(orient="records"),
             "cv_auc": float(selected["auc"]),
             "cv_gini": float(selected["gini"]),
-            "monotonicity_auc_cost": float(comparison.set_index("candidate").loc["lightgbm_unconstrained", "auc"] - comparison.set_index("candidate").loc[lgbm_name, "auc"]) if sensitivity else None,
+            "monotonicity_auc_cost": float(
+                comparison.set_index("candidate").loc["lightgbm_unconstrained", "auc"]
+                - comparison.set_index("candidate").loc[lgbm_name, "auc"]
+            )
+            if sensitivity
+            else None,
             "threshold": threshold,
             "threshold_rule": "cost_fp / (cost_fp + cost_fn) on calibrated PD",
             "pd_floor": policy.PD_FLOOR,

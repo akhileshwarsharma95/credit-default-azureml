@@ -24,7 +24,15 @@ MUTED = "#898781"
 GRID = "#e1e0d9"
 AXIS = "#c3c2b7"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
-STATUS = {"green": "#0ca30c", "amber": "#fab219", "red": "#d03b3b", "stable": "#0ca30c", "warn": "#fab219", "alert": "#d03b3b", "insufficient": "#898781"}
+STATUS = {
+    "green": "#0ca30c",
+    "amber": "#fab219",
+    "red": "#d03b3b",
+    "stable": "#0ca30c",
+    "warn": "#fab219",
+    "alert": "#d03b3b",
+    "insufficient": "#898781",
+}
 BLUE_RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
 
 
@@ -125,7 +133,14 @@ def score_distribution(y, p, threshold: float):
     ax.plot(grid, cdf_good, color=SERIES[0], label="No default")
     ax.plot(grid, cdf_bad, color=SERIES[1], label="Default")
     ax.vlines(grid[k], cdf_bad[k], cdf_good[k], color=INK2, lw=1)
-    ax.text(grid[k] + 0.01, (cdf_bad[k] + cdf_good[k]) / 2, f"KS {gap[k]:.3f} at PD {grid[k]:.2f}", color=INK2, fontsize=9, va="center")
+    ax.text(
+        grid[k] + 0.01,
+        (cdf_bad[k] + cdf_good[k]) / 2,
+        f"KS {gap[k]:.3f} at PD {grid[k]:.2f}",
+        color=INK2,
+        fontsize=9,
+        va="center",
+    )
     ax.axvline(threshold, color=AXIS, lw=1)
     ax.text(threshold, 0.02, f" cut-off {threshold:.2f}", color=INK2, fontsize=9)
     ax.set_xlabel("Predicted PD")
@@ -143,8 +158,14 @@ def cost_curve(curve: pd.DataFrame, chosen: float, cost_fn: float, cost_fp: floa
     ax.axvline(chosen, color=INK2, lw=1)
     ax.plot([best["threshold"]], [best["expected_cost_per_client"]], "o", color=SERIES[1], ms=8, mec=SURFACE, mew=2)
     ax.text(chosen, ax.get_ylim()[1], f" policy cut-off {chosen:.3f}", color=INK2, fontsize=9, va="top")
-    ax.annotate(f"empirical minimum {best['threshold']:.2f}", (best["threshold"], best["expected_cost_per_client"]),
-                textcoords="offset points", xytext=(14, 8), fontsize=9, color=INK2)
+    ax.annotate(
+        f"empirical minimum {best['threshold']:.2f}",
+        (best["threshold"], best["expected_cost_per_client"]),
+        textcoords="offset points",
+        xytext=(14, 8),
+        fontsize=9,
+        color=INK2,
+    )
     ax.set_xlabel("PD cut-off for intervention")
     ax.set_ylabel("Expected cost per client")
     ax.set_title("Cut-off economics on the test set", pad=18)
@@ -175,7 +196,14 @@ def backtest(bt: pd.DataFrame):
     ax.plot(x, bt["mean_pd"], "o", mfc=SURFACE, mec=INK2, mew=1.5, ms=9, ls="none", label="Mean PD (model)")
     for i, row in bt.iterrows():
         ax.plot(x[i], row["observed_dr"], "o", color=STATUS[row["traffic_light"]], ms=9, mec=SURFACE, mew=2)
-        ax.text(x[i], max(row["observed_dr"], row["mean_pd"]) + 0.03, row["traffic_light"].upper(), ha="center", fontsize=8, color=INK2)
+        ax.text(
+            x[i],
+            max(row["observed_dr"], row["mean_pd"]) + 0.03,
+            row["traffic_light"].upper(),
+            ha="center",
+            fontsize=8,
+            color=INK2,
+        )
     ax.plot([], [], "o", color=MUTED, ms=9, label="Observed DR (coloured by Jeffreys test)")
     ax.set_xticks(x, [f"{g}\n{r}" for g, r in zip(bt["grade"], bt["pd_range"])])
     ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
@@ -204,13 +232,29 @@ def fairness(table: pd.DataFrame, threshold: float):
         t = t.iloc[sorted(range(len(t)), key=lambda i: str(t["group"].iloc[i]).replace("<", "0"), reverse=True)]
         labels = t["group"].astype(str)
         ax.barh(labels, t["flagged_rate"], height=0.35, color=SERIES[0], label="Flagged for intervention")
-        ax.plot(t["observed_dr"], labels, "o", color=SERIES[1], ms=8, mec=SURFACE, mew=2, ls="none", label="Observed default rate")
+        ax.plot(
+            t["observed_dr"],
+            labels,
+            "o",
+            color=SERIES[1],
+            ms=8,
+            mec=SURFACE,
+            mew=2,
+            ls="none",
+            label="Observed default rate",
+        )
         ax.set_title(attr)
         ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
         ax.grid(axis="y", visible=False)
     handles, labels = axes[0][0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.04))
-    fig.suptitle(f"Fairness check at cut-off {threshold:.2f} - attributes are not model inputs", x=0.01, ha="left", fontsize=12, fontweight="semibold")
+    fig.suptitle(
+        f"Fairness check at cut-off {threshold:.2f} - attributes are not model inputs",
+        x=0.01,
+        ha="left",
+        fontsize=12,
+        fontweight="semibold",
+    )
     fig.tight_layout(rect=(0, 0.06, 1, 1))
     return fig
 
@@ -254,7 +298,9 @@ def roll_rate_heatmap(matrix: pd.DataFrame):
     ax.imshow(m, cmap=cmap, vmin=0, vmax=1)
     for i in range(m.shape[0]):
         for j in range(m.shape[1]):
-            ax.text(j, i, f"{m[i, j]:.0%}", ha="center", va="center", fontsize=9, color="#ffffff" if m[i, j] > 0.45 else INK)
+            ax.text(
+                j, i, f"{m[i, j]:.0%}", ha="center", va="center", fontsize=9, color="#ffffff" if m[i, j] > 0.45 else INK
+            )
     labels = [b.split(" ", 1)[1] for b in matrix.columns]
     ax.set_xticks(range(len(labels)), labels)
     ax.set_yticks(range(len(labels)), labels)
@@ -284,7 +330,9 @@ def shap_beeswarm(contrib: pd.DataFrame, features: pd.DataFrame, max_display: in
     try:
         import shap
 
-        expl = shap.Explanation(values=contrib.to_numpy(), data=features[contrib.columns].to_numpy(), feature_names=list(contrib.columns))
+        expl = shap.Explanation(
+            values=contrib.to_numpy(), data=features[contrib.columns].to_numpy(), feature_names=list(contrib.columns)
+        )
         shap.plots.beeswarm(expl, max_display=max_display, show=False)
         fig = plt.gcf()
         fig.set_facecolor(SURFACE)
@@ -305,7 +353,15 @@ def waterfall(contrib_row: pd.Series, feature_row: pd.Series, base_value: float,
     left = base_value + np.cumsum(vals) - vals  # bottom (smallest) to top (largest driver)
     for i, ((_label, v), l0) in enumerate(zip(items, left)):
         ax.barh(i, v, left=l0, height=0.55, color=SERIES[7] if v > 0 else SERIES[0])
-        ax.text(l0 + v + (0.02 if v > 0 else -0.02), i, f"{v:+.2f}", va="center", ha="left" if v > 0 else "right", fontsize=8, color=INK2)
+        ax.text(
+            l0 + v + (0.02 if v > 0 else -0.02),
+            i,
+            f"{v:+.2f}",
+            va="center",
+            ha="left" if v > 0 else "right",
+            fontsize=8,
+            color=INK2,
+        )
     ax.set_yticks(range(len(items)), [lbl for lbl, _ in items], fontsize=8)
     ax.axvline(base_value, color=AXIS, lw=1)
     ax.set_xlabel("Log-odds of default (base value -> this client)")

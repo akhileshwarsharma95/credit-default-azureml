@@ -89,7 +89,11 @@ def main(argv=None) -> None:
         m = metrics.discrimination(y, p)
         m |= metrics.bootstrap_ci(y, p, args.n_bootstrap, args.random_state)
         m |= metrics.calibration(y, p)
-        m |= {f"uncalibrated_{k}": v for k, v in metrics.calibration(y, p_uncal).items() if k in {"brier", "ece", "log_loss", "calibration_slope"}}
+        m |= {
+            f"uncalibrated_{k}": v
+            for k, v in metrics.calibration(y, p_uncal).items()
+            if k in {"brier", "ece", "log_loss", "calibration_slope"}
+        }
         tm = metrics.threshold_metrics(y, p, t, a.cost_fn, a.cost_fp)
         m |= tm
         m |= {"recall_at_0.5": metrics.threshold_metrics(y, p, 0.5, a.cost_fn, a.cost_fp)["recall"]}
@@ -100,7 +104,10 @@ def main(argv=None) -> None:
         grades = policy.assign_grade(p)
         bt = metrics.backtest_by_grade(y, p, grades)
         fair, fair_summary = metrics.fairness_table(y, p, t, fairness_groups(test))
-        m |= {"backtest_red_grades": int((bt["traffic_light"] == "red").sum()), "backtest_amber_grades": int((bt["traffic_light"] == "amber").sum())}
+        m |= {
+            "backtest_red_grades": int((bt["traffic_light"] == "red").sum()),
+            "backtest_amber_grades": int((bt["traffic_light"] == "amber").sum()),
+        }
         m |= fair_summary
 
         # Explainability
@@ -117,14 +124,20 @@ def main(argv=None) -> None:
         checks = {
             "auc_above_minimum": bool(m["auc"] >= args.min_auc),
             "calibration_ece_ok": bool(m["ece"] <= args.max_ece),
-            "not_worse_than_champion": bool(champ.get("auc") is None or m["auc"] >= champ["auc"] - args.champion_tolerance),
+            "not_worse_than_champion": bool(
+                champ.get("auc") is None or m["auc"] >= champ["auc"] - args.champion_tolerance
+            ),
         }
         decision = {
             "register": all(checks.values()),
             "checks": checks,
             "candidate_auc": m["auc"],
             "champion": champ,
-            "thresholds": {"min_auc": args.min_auc, "max_ece": args.max_ece, "champion_tolerance": args.champion_tolerance},
+            "thresholds": {
+                "min_auc": args.min_auc,
+                "max_ece": args.max_ece,
+                "champion_tolerance": args.champion_tolerance,
+            },
             "backtest_warning": bool(m["backtest_red_grades"] > 0),
         }
 
@@ -133,15 +146,25 @@ def main(argv=None) -> None:
         write_json(decision, out / "decision.json")
         write_json(fair_summary, out / "fairness_summary.json")
         for name, df in {
-            "backtest": bt, "deciles": dec, "fairness": fair, "importance": imp, "cost_curve": curve,
-            "calibration_table": metrics.calibration_table(y, p), "reason_frequency": reason_freq,
+            "backtest": bt,
+            "deciles": dec,
+            "fairness": fair,
+            "importance": imp,
+            "cost_curve": curve,
+            "calibration_table": metrics.calibration_table(y, p),
+            "reason_frequency": reason_freq,
         }.items():
             df.to_csv(out / f"{name}.csv", index=False)
         score_frame(pkg, test).to_csv(out / "test_scored.csv", index=False)
 
         plots.save(plots.roc_pr(y, p, m), plot_dir / "roc_pr.png")
-        plots.save(plots.calibration({"Calibrated": metrics.calibration_table(y, p), "Uncalibrated": metrics.calibration_table(y, p_uncal)},
-                                     f"ECE {m['ece']:.4f} calibrated vs {m['uncalibrated_ece']:.4f} uncalibrated"), plot_dir / "calibration.png")
+        plots.save(
+            plots.calibration(
+                {"Calibrated": metrics.calibration_table(y, p), "Uncalibrated": metrics.calibration_table(y, p_uncal)},
+                f"ECE {m['ece']:.4f} calibrated vs {m['uncalibrated_ece']:.4f} uncalibrated",
+            ),
+            plot_dir / "calibration.png",
+        )
         plots.save(plots.score_distribution(y, p, t), plot_dir / "ks_chart.png")
         plots.save(plots.cost_curve(curve, t, a.cost_fn, a.cost_fp), plot_dir / "cost_curve.png")
         plots.save(plots.confusion(tm), plot_dir / "confusion_matrix.png")
@@ -155,14 +178,19 @@ def main(argv=None) -> None:
             plots.save(bees, plot_dir / "shap_beeswarm.png")
         for label, idx in [("high_risk", int(np.argmax(p))), ("median_risk", int(np.argsort(p)[len(p) // 2]))]:
             title = f"Why PD = {p[idx]:.1%} for client {int(test.iloc[idx]['ID'])} ({label.replace('_', ' ')})"
-            plots.save(plots.waterfall(contrib.iloc[idx], feats.iloc[idx], float(base_values[idx]), title), plot_dir / f"waterfall_{label}.png")
+            plots.save(
+                plots.waterfall(contrib.iloc[idx], feats.iloc[idx], float(base_values[idx]), title),
+                plot_dir / f"waterfall_{label}.png",
+            )
 
         log_metrics(m, prefix="test_")
         log_metrics({"register_decision": decision["register"], "champion_auc": champ.get("auc", float("nan"))})
         mlflow.log_artifacts(str(out), artifact_path="evaluation")
         log_table(bt, "evaluation/backtest_table.csv")
-        print(f"Test AUC {m['auc']:.4f} [{m['auc_ci_low']:.4f}, {m['auc_ci_high']:.4f}] | Gini {m['gini']:.4f} | KS {m['ks']:.4f} | "
-              f"ECE {m['ece']:.4f} | champion: {champ['status']} | register: {decision['register']}")
+        print(
+            f"Test AUC {m['auc']:.4f} [{m['auc_ci_low']:.4f}, {m['auc_ci_high']:.4f}] | Gini {m['gini']:.4f} | KS {m['ks']:.4f} | "
+            f"ECE {m['ece']:.4f} | champion: {champ['status']} | register: {decision['register']}"
+        )
 
 
 if __name__ == "__main__":

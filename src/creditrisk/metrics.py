@@ -25,7 +25,12 @@ def ks_statistic(y, p) -> float:
 
 def discrimination(y, p) -> dict:
     auc = roc_auc_score(y, p)
-    return {"auc": float(auc), "gini": float(2 * auc - 1), "ks": ks_statistic(y, p), "pr_auc": float(average_precision_score(y, p))}
+    return {
+        "auc": float(auc),
+        "gini": float(2 * auc - 1),
+        "ks": ks_statistic(y, p),
+        "pr_auc": float(average_precision_score(y, p)),
+    }
 
 
 def bootstrap_ci(y, p, n_boot: int = 500, seed: int = 42, alpha: float = 0.05) -> dict:
@@ -54,7 +59,11 @@ def bootstrap_ci(y, p, n_boot: int = 500, seed: int = 42, alpha: float = 0.05) -
 def calibration_table(y, p, n_bins: int = 10) -> pd.DataFrame:
     df = pd.DataFrame({"y": np.asarray(y), "p": np.asarray(p)})
     df["bin"] = pd.qcut(df["p"].rank(method="first"), q=n_bins, labels=False)
-    out = df.groupby("bin").agg(n=("y", "size"), defaults=("y", "sum"), mean_pd=("p", "mean"), observed_dr=("y", "mean")).reset_index()
+    out = (
+        df.groupby("bin")
+        .agg(n=("y", "size"), defaults=("y", "sum"), mean_pd=("p", "mean"), observed_dr=("y", "mean"))
+        .reset_index()
+    )
     return out
 
 
@@ -124,7 +133,11 @@ def cost_curve(y, p, cost_fn: float, cost_fp: float, grid: np.ndarray | None = N
 def decile_table(y, p, n: int = 10) -> pd.DataFrame:
     df = pd.DataFrame({"y": np.asarray(y), "p": np.asarray(p)})
     df["decile"] = n - pd.qcut(df["p"].rank(method="first"), q=n, labels=False)  # 1 = riskiest
-    t = df.groupby("decile").agg(n=("y", "size"), defaults=("y", "sum"), mean_pd=("p", "mean"), min_pd=("p", "min")).reset_index()
+    t = (
+        df.groupby("decile")
+        .agg(n=("y", "size"), defaults=("y", "sum"), mean_pd=("p", "mean"), min_pd=("p", "min"))
+        .reset_index()
+    )
     t["observed_dr"] = t["defaults"] / t["n"]
     t["cum_default_capture"] = t["defaults"].cumsum() / t["defaults"].sum()
     t["cum_population"] = t["n"].cumsum() / t["n"].sum()

@@ -52,7 +52,9 @@ def main(argv=None) -> None:
             }
         )
         mlflow.log_artifact(str(out / "quality_report.json"), artifact_path="scoring")
-        print(f"Scored {len(scored):,} clients | mean PD {scored['pd'].mean():.3f} | intervene {(scored['action'] == 'Intervene').mean():.1%}")
+        print(
+            f"Scored {len(scored):,} clients | mean PD {scored['pd'].mean():.3f} | intervene {(scored['action'] == 'Intervene').mean():.1%}"
+        )
 
 
 if __name__ == "__main__":

@@ -30,7 +30,19 @@ INPUTS = None
 OUTPUTS = None
 LOGGER = None
 MODEL_VERSION = "unknown"
-OUTPUT_COLUMNS = ["pd", "grade", "action", "flag", "ead", "el", "ifrs9_stage", "ecl", "ews_triggers", "limit_action", "recommended_limit"]
+OUTPUT_COLUMNS = [
+    "pd",
+    "grade",
+    "action",
+    "flag",
+    "ead",
+    "el",
+    "ifrs9_stage",
+    "ecl",
+    "ews_triggers",
+    "limit_action",
+    "recommended_limit",
+]
 
 
 def init():
@@ -39,7 +51,9 @@ def init():
     from creditrisk.scoring import load_package
 
     LOGGER = get_logger("endpoint")
-    model_dir = os.getenv("AZUREML_MODEL_DIR", str(Path(__file__).resolve().parents[2] / "outputs" / "local" / "model_package"))
+    model_dir = os.getenv(
+        "AZUREML_MODEL_DIR", str(Path(__file__).resolve().parents[2] / "outputs" / "local" / "model_package")
+    )
     m = re.search(r"/([^/]+)/(\d+)/?$", model_dir.rstrip("/") + "/")
     MODEL_VERSION = f"{m.group(1)}:{m.group(2)}" if m else "local"
     PKG = load_package(model_dir)
@@ -50,7 +64,9 @@ def init():
         OUTPUTS = Collector(name="model_outputs", on_error=lambda e: LOGGER.warning("collector error: %s", e))
     except Exception as exc:  # noqa: BLE001 - data collection is optional outside Azure
         LOGGER.info("Data collector not active: %s", exc)
-    log_event(LOGGER, "model_loaded", model_version=MODEL_VERSION, family=PKG.summary["model_family"], threshold=PKG.threshold)
+    log_event(
+        LOGGER, "model_loaded", model_version=MODEL_VERSION, family=PKG.summary["model_family"], threshold=PKG.threshold
+    )
 
 
 def _bad_request(message: str, **extra):
@@ -102,11 +118,21 @@ def run(raw_data):
         item["pd"] = round(float(item["pd"]), 5)
         if "ID" in df.columns:
             item["ID"] = int(df["ID"].iloc[i])
-        item["reason_codes"] = [
-            {"code": row[f"reason_code_{c[-1]}"], "text": row[c]} for c in reason_cols if row[c]
-        ]
+        item["reason_codes"] = [{"code": row[f"reason_code_{c[-1]}"], "text": row[c]} for c in reason_cols if row[c]]
         predictions.append(item)
 
     latency = round((time.perf_counter() - start) * 1000, 1)
-    log_event(LOGGER, "scored", model_version=MODEL_VERSION, n_clients=len(df), mean_pd=float(scored["pd"].mean()), latency_ms=latency)
-    return {"model_version": MODEL_VERSION, "threshold": PKG.threshold, "latency_ms": latency, "predictions": predictions}
+    log_event(
+        LOGGER,
+        "scored",
+        model_version=MODEL_VERSION,
+        n_clients=len(df),
+        mean_pd=float(scored["pd"].mean()),
+        latency_ms=latency,
+    )
+    return {
+        "model_version": MODEL_VERSION,
+        "threshold": PKG.threshold,
+        "latency_ms": latency,
+        "predictions": predictions,
+    }

@@ -90,7 +90,11 @@ def _read_any(path: str | Path) -> pd.DataFrame:
         path = candidates[0]
 
     suffix = path.suffix.lower()
-    reader = (lambda **kw: pd.read_excel(path, **kw)) if suffix in {".xls", ".xlsx"} else (lambda **kw: pd.read_csv(path, **kw))
+    reader = (
+        (lambda **kw: pd.read_excel(path, **kw))
+        if suffix in {".xls", ".xlsx"}
+        else (lambda **kw: pd.read_csv(path, **kw))
+    )
     df = reader()
     first_cols = {str(c).strip().upper() for c in df.columns}
     if {"X1", "X2", "Y"}.issubset(first_cols):

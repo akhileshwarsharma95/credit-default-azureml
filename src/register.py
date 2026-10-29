@@ -50,7 +50,10 @@ def main(argv=None) -> None:
     with mlflow.start_run() as run:
         mlflow.set_tags({"stage": "register", "git_sha": args.git_sha, "data_version": args.data_version})
         if not (decision["register"] or args.force):
-            write_json({"registered": False, "reason": decision["checks"], "champion": decision["champion"]}, info_dir / "model_info.json")
+            write_json(
+                {"registered": False, "reason": decision["checks"], "champion": decision["champion"]},
+                info_dir / "model_info.json",
+            )
             mlflow.log_metric("registered", 0)
             print(f"Quality gate failed - model NOT registered: {decision['checks']}")
             return
@@ -60,16 +63,24 @@ def main(argv=None) -> None:
             shutil.copytree(args.model_input, pkg)
             shutil.copytree(eval_dir, pkg / "evaluation")
             card = model_card.build(
-                summary, m, decision,
-                pd.read_csv(eval_dir / "backtest.csv"), pd.read_csv(eval_dir / "importance.csv"), fair,
-                args.model_name, git_sha=args.git_sha, data_version=args.data_version,
+                summary,
+                m,
+                decision,
+                pd.read_csv(eval_dir / "backtest.csv"),
+                pd.read_csv(eval_dir / "importance.csv"),
+                fair,
+                args.model_name,
+                git_sha=args.git_sha,
+                data_version=args.data_version,
             )
             (pkg / "MODEL_CARD.md").write_text(card)
             mlflow.log_artifacts(str(pkg), artifact_path="model")
             mv = mlflow.register_model(f"runs:/{run.info.run_id}/model", args.model_name)
 
             # Re-render the card with the version number now that it is known
-            card = card.replace(f"# Model card - {args.model_name}", f"# Model card - {args.model_name} v{mv.version}", 1)
+            card = card.replace(
+                f"# Model card - {args.model_name}", f"# Model card - {args.model_name} v{mv.version}", 1
+            )
             (info_dir / "MODEL_CARD.md").write_text(card)
             mlflow.log_artifact(str(info_dir / "MODEL_CARD.md"))
 
@@ -91,11 +102,21 @@ def main(argv=None) -> None:
             except Exception as exc:  # noqa: BLE001 - tags are metadata, never block registration
                 print(f"Could not set tag {k}: {exc}")
         try:
-            client.update_model_version(args.model_name, mv.version, description=f"PD model ({summary['model_family']}), test AUC {m['auc']:.3f}")
+            client.update_model_version(
+                args.model_name,
+                mv.version,
+                description=f"PD model ({summary['model_family']}), test AUC {m['auc']:.3f}",
+            )
         except Exception as exc:  # noqa: BLE001
             print(f"Could not set description: {exc}")
 
-        info = {"registered": True, "name": args.model_name, "version": str(mv.version), "run_id": run.info.run_id, "tags": tags}
+        info = {
+            "registered": True,
+            "name": args.model_name,
+            "version": str(mv.version),
+            "run_id": run.info.run_id,
+            "tags": tags,
+        }
         write_json(info, info_dir / "model_info.json")
         mlflow.log_metric("registered", 1)
         print(f"Registered {args.model_name} version {mv.version}")

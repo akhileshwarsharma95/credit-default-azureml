@@ -13,8 +13,18 @@ def _f(v, nd: int = 3) -> str:
     return "n/a" if v is None else f"{v:.{nd}f}"
 
 
-def build(summary: dict, m: dict, decision: dict, backtest: pd.DataFrame | None, importance: pd.DataFrame | None,
-          fairness_summary: dict, model_name: str, version: str | None = None, git_sha: str = "unknown", data_version: str = "unknown") -> str:
+def build(
+    summary: dict,
+    m: dict,
+    decision: dict,
+    backtest: pd.DataFrame | None,
+    importance: pd.DataFrame | None,
+    fairness_summary: dict,
+    model_name: str,
+    version: str | None = None,
+    git_sha: str = "unknown",
+    data_version: str = "unknown",
+) -> str:
     a = summary["assumptions"]
     lines = [
         f"# Model card - {model_name}{f' v{version}' if version else ''}",
@@ -50,7 +60,10 @@ def build(summary: dict, m: dict, decision: dict, backtest: pd.DataFrame | None,
         "## PD backtest by grade (Jeffreys test)",
     ]
     if backtest is not None and not backtest.empty:
-        lines += ["| Grade | PD range | Clients | Observed DR | Mean PD | Jeffreys p | Light |", "|---|---|---|---|---|---|---|"]
+        lines += [
+            "| Grade | PD range | Clients | Observed DR | Mean PD | Jeffreys p | Light |",
+            "|---|---|---|---|---|---|---|",
+        ]
         lines += [
             f"| {r.grade} | {r.pd_range} | {r.n:,} | {r.observed_dr:.1%} | {r.mean_pd:.1%} | {r.jeffreys_p_underestimation:.3f} | {r.traffic_light} |"
             for r in backtest.itertuples()

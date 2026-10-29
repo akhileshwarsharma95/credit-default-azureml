@@ -120,7 +120,9 @@ def git_sha() -> str:
     if os.getenv("GITHUB_SHA"):
         return os.environ["GITHUB_SHA"][:12]
     try:
-        return subprocess.check_output(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
+        ).strip()
     except Exception:  # noqa: BLE001
         return "unknown"
 

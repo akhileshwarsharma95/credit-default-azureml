@@ -18,7 +18,9 @@ def make_synthetic(n: int = 3000, seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     risk = rng.normal(size=n)
     limit = (np.exp(rng.normal(11.5, 0.7, n)) // 10_000 * 10_000).clip(10_000, 800_000).astype(int)
-    pay = np.column_stack([np.clip(np.round(risk * 1.1 + rng.normal(0, 0.8, n) - 0.6), -2, 8) for _ in range(6)]).astype(int)
+    pay = np.column_stack(
+        [np.clip(np.round(risk * 1.1 + rng.normal(0, 0.8, n) - 0.6), -2, 8) for _ in range(6)]
+    ).astype(int)
     util = np.clip(rng.beta(2, 3, n) + 0.15 * risk, -0.05, 1.3)
     bills = np.round(limit[:, None] * np.clip(util[:, None] + rng.normal(0, 0.05, (n, 6)), -0.05, 1.5)).astype(int)
     paid = np.round(np.clip(bills, 0, None) * np.clip(rng.beta(2, 5, (n, 6)) - 0.05 * risk[:, None], 0, 1)).astype(int)

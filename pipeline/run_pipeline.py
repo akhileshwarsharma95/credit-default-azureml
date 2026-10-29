@@ -19,7 +19,16 @@ import sys
 import tempfile
 from pathlib import Path
 
-from pipeline.azure_utils import COMPONENTS, DEFAULTS, ROOT, ensure_compute, ensure_data_asset, get_ml_client, git_sha, stream_and_check
+from pipeline.azure_utils import (
+    COMPONENTS,
+    DEFAULTS,
+    ROOT,
+    ensure_compute,
+    ensure_data_asset,
+    get_ml_client,
+    git_sha,
+    stream_and_check,
+)
 
 
 def build_pipeline(raw_data, compute: str, args, data_version: str, sha: str):
@@ -37,7 +46,9 @@ def build_pipeline(raw_data, compute: str, args, data_version: str, sha: str):
         "calibration, backtest, explainability, champion/challenger registration.",
         default_compute=compute,
     )
-    def training_pipeline(raw_data, model_name, n_trials, exclude_sensitive, cost_fn, cost_fp):  # types inferred by the SDK
+    def training_pipeline(
+        raw_data, model_name, n_trials, exclude_sensitive, cost_fn, cost_fp
+    ):  # types inferred by the SDK
         preprocess = preprocess_component(raw_data=raw_data)
         preprocess.display_name = "1 - preprocess"
         train = train_component(
@@ -48,7 +59,9 @@ def build_pipeline(raw_data, compute: str, args, data_version: str, sha: str):
             cost_fp=cost_fp,
         )
         train.display_name = "2 - train"
-        evaluate = evaluate_component(model_input=train.outputs.model_output, test_data=preprocess.outputs.test_data, model_name=model_name)
+        evaluate = evaluate_component(
+            model_input=train.outputs.model_output, test_data=preprocess.outputs.test_data, model_name=model_name
+        )
         evaluate.display_name = "3 - evaluate"
         register = register_component(
             model_input=train.outputs.model_output,
@@ -101,7 +114,9 @@ def main() -> None:
     p.add_argument("--experiment", default=DEFAULTS["experiment"])
     p.add_argument("--model-name", dest="model_name", default=DEFAULTS["model_name"])
     p.add_argument("--n-trials", dest="n_trials", type=int, default=25)
-    p.add_argument("--include-sensitive", action="store_true", help="Use SEX, MARRIAGE, AGE as features (off by default)")
+    p.add_argument(
+        "--include-sensitive", action="store_true", help="Use SEX, MARRIAGE, AGE as features (off by default)"
+    )
     p.add_argument("--cost-fn", dest="cost_fn", type=float, default=5.0)
     p.add_argument("--cost-fp", dest="cost_fp", type=float, default=1.0)
     p.add_argument("--wait", action="store_true", help="Stream logs and fail if the pipeline fails")
@@ -113,7 +128,9 @@ def main() -> None:
     if args.dry_run:
         from azure.ai.ml import Input
 
-        job = build_pipeline(Input(type="uri_file", path="azureml:credit-default-raw@latest"), args.compute, args, "dry-run", sha)
+        job = build_pipeline(
+            Input(type="uri_file", path="azureml:credit-default-raw@latest"), args.compute, args, "dry-run", sha
+        )
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "pipeline.yml"
             job.dump(out)
@@ -127,8 +144,16 @@ def main() -> None:
     print(f"Workspace: {ml_client.workspace_name} (resource group {ml_client.resource_group_name})")
     ensure_compute(ml_client, args.compute, args.vm_size, args.max_nodes)
     raw = find_raw_file(args.raw_file)
-    asset = ensure_data_asset(ml_client, DEFAULTS["raw_asset"], raw, "UCI Default of Credit Card Clients (id 350), raw file", {"source": "UCI"})
-    job = build_pipeline(Input(type="uri_file", path=asset.id), args.compute, args, f"{asset.name}:{asset.version}", sha)
+    asset = ensure_data_asset(
+        ml_client,
+        DEFAULTS["raw_asset"],
+        raw,
+        "UCI Default of Credit Card Clients (id 350), raw file",
+        {"source": "UCI"},
+    )
+    job = build_pipeline(
+        Input(type="uri_file", path=asset.id), args.compute, args, f"{asset.name}:{asset.version}", sha
+    )
 
     if args.schedule:
         from azure.ai.ml.constants import TimeZone
@@ -153,7 +178,9 @@ def main() -> None:
             try:
                 # Pipeline-level outputs have no path of their own, so download from the register step
                 register_job = next(
-                    j for j in ml_client.jobs.list(parent_job_name=submitted.name) if "register" in (j.display_name or "")
+                    j
+                    for j in ml_client.jobs.list(parent_job_name=submitted.name)
+                    if "register" in (j.display_name or "")
                 )
                 ml_client.jobs.download(register_job.name, output_name="model_info_output", download_path=tmp)
                 info_file = next(Path(tmp).rglob("model_info.json"))

@@ -39,7 +39,9 @@ def engineered_columns(input_cols: list[str]) -> list[str]:
     return list(input_cols) + ENGINEERED
 
 
-def build_lgbm(input_cols: list[str], params: dict | None = None, monotone: bool = True, random_state: int = 42) -> Pipeline:
+def build_lgbm(
+    input_cols: list[str], params: dict | None = None, monotone: bool = True, random_state: int = 42
+) -> Pipeline:
     cols = engineered_columns(input_cols)
     constraints = [MONOTONE_DIRECTION.get(c, 0) if monotone else 0 for c in cols]
     est = LGBMClassifier(
@@ -66,11 +68,22 @@ def build_logreg(input_cols: list[str], C: float = 0.5) -> Pipeline:
     prep = ColumnTransformer(
         [
             ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), cats),
-            ("money", Pipeline([("log", FunctionTransformer(signed_log1p, feature_names_out="one-to-one")), ("scale", StandardScaler())]), money),
+            (
+                "money",
+                Pipeline(
+                    [
+                        ("log", FunctionTransformer(signed_log1p, feature_names_out="one-to-one")),
+                        ("scale", StandardScaler()),
+                    ]
+                ),
+                money,
+            ),
             ("num", StandardScaler(), other),
         ]
     )
-    return Pipeline([("features", FeatureEngineer()), ("prep", prep), ("model", LogisticRegression(C=C, max_iter=5000))])
+    return Pipeline(
+        [("features", FeatureEngineer()), ("prep", prep), ("model", LogisticRegression(C=C, max_iter=5000))]
+    )
 
 
 def tune_lgbm(
@@ -124,15 +137,24 @@ def calibrate(model: Pipeline, method: str, cv_folds: int, random_state: int):
     return CalibratedClassifierCV(model, method=method, cv=cv_splitter(cv_folds, random_state), ensemble=False)
 
 
-def oof_calibrated_pd(final, base_unfitted: Pipeline, X: pd.DataFrame, y: pd.Series, oof_probability: np.ndarray,
-                      cv_folds: int, random_state: int) -> np.ndarray:
+def oof_calibrated_pd(
+    final,
+    base_unfitted: Pipeline,
+    X: pd.DataFrame,
+    y: pd.Series,
+    oof_probability: np.ndarray,
+    cv_folds: int,
+    random_state: int,
+) -> np.ndarray:
     """Out-of-sample PDs for the training population: out-of-fold base scores
     passed through the fitted calibrator. Used as the drift baseline, because
     in-sample scores of a boosted model are more extreme than production scores."""
     if not isinstance(final, CalibratedClassifierCV):
         return oof_probability
     if hasattr(base_unfitted, "decision_function"):  # calibrator was fitted on decision scores
-        scores = cross_val_predict(base_unfitted, X, y, cv=cv_splitter(cv_folds, random_state), method="decision_function")
+        scores = cross_val_predict(
+            base_unfitted, X, y, cv=cv_splitter(cv_folds, random_state), method="decision_function"
+        )
     else:
         scores = oof_probability
     return np.clip(final.calibrated_classifiers_[0].calibrators[0].predict(scores), 0.0, 1.0)

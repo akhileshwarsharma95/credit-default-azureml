@@ -35,7 +35,9 @@ def build_schedule(endpoint: str, deployment: str, emails: list[str], hour: int)
 
     definition = MonitorDefinition(
         compute=ServerlessSparkCompute(instance_type="standard_e4s_v3", runtime_version="3.4"),
-        monitoring_target=MonitoringTarget(ml_task="classification", endpoint_deployment_id=f"azureml:{endpoint}:{deployment}"),
+        monitoring_target=MonitoringTarget(
+            ml_task="classification", endpoint_deployment_id=f"azureml:{endpoint}:{deployment}"
+        ),
         alert_notification=AlertNotification(emails=emails) if emails else None,
     )
     return MonitorSchedule(
@@ -56,7 +58,9 @@ def main() -> None:
     args = p.parse_args()
 
     if args.dry_run:
-        schedule = build_schedule(args.endpoint_name, args.deployment or "blue", args.email or ["risk-team@example.com"], args.hour)
+        schedule = build_schedule(
+            args.endpoint_name, args.deployment or "blue", args.email or ["risk-team@example.com"], args.hour
+        )
         with tempfile.TemporaryDirectory() as tmp:
             schedule.dump(Path(tmp) / "monitor.yml")
             print((Path(tmp) / "monitor.yml").read_text())
@@ -68,7 +72,9 @@ def main() -> None:
     if deployment is None:
         traffic = ml_client.online_endpoints.get(args.endpoint_name).traffic or {}
         deployment = max(traffic, key=traffic.get)
-    ml_client.schedules.begin_create_or_update(build_schedule(args.endpoint_name, deployment, args.email, args.hour)).result()
+    ml_client.schedules.begin_create_or_update(
+        build_schedule(args.endpoint_name, deployment, args.email, args.hour)
+    ).result()
     print(f"Model monitor created for {args.endpoint_name}/{deployment} (daily at {args.hour:02d}:00 UTC)")
 
 

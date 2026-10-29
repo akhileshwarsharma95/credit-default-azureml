@@ -44,7 +44,7 @@ def test_quality_gate_fails_on_impossible_values(raw):
 def test_feature_engineering_is_finite_and_stateless(raw):
     X = raw[RAW_FEATURES]
     out = FeatureEngineer().fit(X).transform(X)
-    assert list(out.columns[-len(ENGINEERED):]) == ENGINEERED
+    assert list(out.columns[-len(ENGINEERED) :]) == ENGINEERED
     assert np.isfinite(out[ENGINEERED].to_numpy(dtype=float)).all()
     first = FeatureEngineer().fit(X.iloc[:10]).transform(X.iloc[:10])
     pd.testing.assert_frame_equal(first, out.iloc[:10])  # row-wise: no dependence on other rows
@@ -102,8 +102,15 @@ def test_psi_is_robust_to_csv_float_roundtrip():
 
 @pytest.mark.parametrize(
     "query",
-    ["DROP TABLE portfolio", "SELECT 1; DELETE FROM portfolio", "COPY portfolio TO 'x.csv'", "SELECT * FROM read_csv('/etc/passwd')",
-     "ATTACH 'x.db'", "WITH a AS (SELECT 1) INSERT INTO t SELECT * FROM a", "PRAGMA database_list"],
+    [
+        "DROP TABLE portfolio",
+        "SELECT 1; DELETE FROM portfolio",
+        "COPY portfolio TO 'x.csv'",
+        "SELECT * FROM read_csv('/etc/passwd')",
+        "ATTACH 'x.db'",
+        "WITH a AS (SELECT 1) INSERT INTO t SELECT * FROM a",
+        "PRAGMA database_list",
+    ],
 )
 def test_sql_guard_blocks_unsafe(query):
     with pytest.raises(SqlGuardError):

@@ -27,12 +27,61 @@ def step(name: str, args: list[str]) -> None:
 @pytest.fixture(scope="module")
 def pipeline_run(tmp_path_factory, raw_file, mlflow_store):
     w = tmp_path_factory.mktemp("run")
-    step("preprocess", ["--raw_data", raw_file, "--train_data", w / "train", "--test_data", w / "test", "--quality_report", w / "dq"])
-    step("train", ["--train_data", w / "train", "--model_output", w / "model", "--n_trials", 2, "--tuning_folds", 2, "--cv_folds", 3])
-    step("evaluate", ["--model_input", w / "model", "--test_data", w / "test", "--evaluation_output", w / "eval",
-                      "--model_name", "test-model", "--n_bootstrap", 50, "--min_auc", 0.6, "--max_ece", 0.2])
-    step("register", ["--model_input", w / "model", "--evaluation_output", w / "eval", "--model_name", "test-model",
-                      "--model_info_output", w / "reg", "--git_sha", "abc123", "--data_version", "raw:1"])
+    step(
+        "preprocess",
+        ["--raw_data", raw_file, "--train_data", w / "train", "--test_data", w / "test", "--quality_report", w / "dq"],
+    )
+    step(
+        "train",
+        [
+            "--train_data",
+            w / "train",
+            "--model_output",
+            w / "model",
+            "--n_trials",
+            2,
+            "--tuning_folds",
+            2,
+            "--cv_folds",
+            3,
+        ],
+    )
+    step(
+        "evaluate",
+        [
+            "--model_input",
+            w / "model",
+            "--test_data",
+            w / "test",
+            "--evaluation_output",
+            w / "eval",
+            "--model_name",
+            "test-model",
+            "--n_bootstrap",
+            50,
+            "--min_auc",
+            0.6,
+            "--max_ece",
+            0.2,
+        ],
+    )
+    step(
+        "register",
+        [
+            "--model_input",
+            w / "model",
+            "--evaluation_output",
+            w / "eval",
+            "--model_name",
+            "test-model",
+            "--model_info_output",
+            w / "reg",
+            "--git_sha",
+            "abc123",
+            "--data_version",
+            "raw:1",
+        ],
+    )
     import mlflow
 
     info = json.loads((w / "reg" / "model_info.json").read_text())
@@ -53,8 +102,16 @@ def test_preprocess_outputs(pipeline_run):
 def test_model_package_contents(pipeline_run):
     _, pkg, info = pipeline_run
     assert info["registered"] and info["version"] == "1"
-    for rel in ["MLmodel", "training_summary.json", "reference/reference_profile.json", "reference/background.csv",
-                "evaluation/metrics.json", "evaluation/backtest.csv", "evaluation/test_scored.csv", "MODEL_CARD.md"]:
+    for rel in [
+        "MLmodel",
+        "training_summary.json",
+        "reference/reference_profile.json",
+        "reference/background.csv",
+        "evaluation/metrics.json",
+        "evaluation/backtest.csv",
+        "evaluation/test_scored.csv",
+        "MODEL_CARD.md",
+    ]:
         assert (pkg / rel).exists(), rel
     summary = json.loads((pkg / "training_summary.json").read_text())
     assert not set(summary["features"]) & {"SEX", "MARRIAGE", "AGE"}  # protected attributes excluded by default
@@ -71,22 +128,76 @@ def test_evaluation_quality(pipeline_run):
 
 def test_champion_challenger_second_registration(pipeline_run, tmp_path):
     w, _, _ = pipeline_run
-    step("evaluate", ["--model_input", w / "model", "--test_data", w / "test", "--evaluation_output", tmp_path / "eval2",
-                      "--model_name", "test-model", "--n_bootstrap", 20, "--min_auc", 0.6, "--max_ece", 0.2])
+    step(
+        "evaluate",
+        [
+            "--model_input",
+            w / "model",
+            "--test_data",
+            w / "test",
+            "--evaluation_output",
+            tmp_path / "eval2",
+            "--model_name",
+            "test-model",
+            "--n_bootstrap",
+            20,
+            "--min_auc",
+            0.6,
+            "--max_ece",
+            0.2,
+        ],
+    )
     decision = json.loads((tmp_path / "eval2" / "decision.json").read_text())
     assert decision["champion"]["status"] == "compared" and decision["champion"]["version"] == "1"
     assert decision["register"]  # identical model is not worse than the champion
-    step("register", ["--model_input", w / "model", "--evaluation_output", tmp_path / "eval2", "--model_name", "test-model",
-                      "--model_info_output", tmp_path / "reg2"])
+    step(
+        "register",
+        [
+            "--model_input",
+            w / "model",
+            "--evaluation_output",
+            tmp_path / "eval2",
+            "--model_name",
+            "test-model",
+            "--model_info_output",
+            tmp_path / "reg2",
+        ],
+    )
     assert json.loads((tmp_path / "reg2" / "model_info.json").read_text())["version"] == "2"
 
 
 def test_quality_gate_blocks_registration(pipeline_run, tmp_path):
     w, _, _ = pipeline_run
-    step("evaluate", ["--model_input", w / "model", "--test_data", w / "test", "--evaluation_output", tmp_path / "eval3",
-                      "--model_name", "test-model", "--n_bootstrap", 20, "--min_auc", 0.99])
-    step("register", ["--model_input", w / "model", "--evaluation_output", tmp_path / "eval3", "--model_name", "test-model",
-                      "--model_info_output", tmp_path / "reg3"])
+    step(
+        "evaluate",
+        [
+            "--model_input",
+            w / "model",
+            "--test_data",
+            w / "test",
+            "--evaluation_output",
+            tmp_path / "eval3",
+            "--model_name",
+            "test-model",
+            "--n_bootstrap",
+            20,
+            "--min_auc",
+            0.99,
+        ],
+    )
+    step(
+        "register",
+        [
+            "--model_input",
+            w / "model",
+            "--evaluation_output",
+            tmp_path / "eval3",
+            "--model_name",
+            "test-model",
+            "--model_info_output",
+            tmp_path / "reg3",
+        ],
+    )
     assert json.loads((tmp_path / "reg3" / "model_info.json").read_text())["registered"] is False
 
 
@@ -99,7 +210,9 @@ def test_batch_scoring_monitoring_insights(pipeline_run, tmp_path):
     for name, batch in [("stable", w / "test" / "test.csv"), ("downturn", tmp_path / "downturn.csv")]:
         out = tmp_path / name
         step("score_batch", ["--model_input", pkg, "--scoring_data", batch, "--scored_output", out / "scored"])
-        step("monitor_drift", ["--model_input", pkg, "--scored_data", out / "scored", "--monitoring_output", out / "mon"])
+        step(
+            "monitor_drift", ["--model_input", pkg, "--scored_data", out / "scored", "--monitoring_output", out / "mon"]
+        )
         step("portfolio_insights", ["--scored_data", out / "scored", "--insights_output", out / "ins"])
     stable = json.loads((tmp_path / "stable" / "mon" / "drift_summary.json").read_text())
     downturn = json.loads((tmp_path / "downturn" / "mon" / "drift_summary.json").read_text())
@@ -134,10 +247,21 @@ def test_agent_offline_answers(pipeline_run):
 
     scored = pd.read_csv(pkg / "evaluation" / "test_scored.csv")
     _, tables = insights.portfolio_insights(scored)
-    con = insights.connect({"portfolio": tables["fact_scores"], "backtest": pd.read_csv(pkg / "evaluation" / "backtest.csv"),
-                            **{k: v for k, v in tables.items() if k != "fact_scores"}})
+    con = insights.connect(
+        {
+            "portfolio": tables["fact_scores"],
+            "backtest": pd.read_csv(pkg / "evaluation" / "backtest.csv"),
+            **{k: v for k, v in tables.items() if k != "fact_scores"},
+        }
+    )
     agent = PortfolioAgent(con)
-    for q in ["exposure by grade", "segments", "IFRS 9 stages", "did the backtest flag anything", f"explain client {int(scored['ID'].iloc[0])}"]:
+    for q in [
+        "exposure by grade",
+        "segments",
+        "IFRS 9 stages",
+        "did the backtest flag anything",
+        f"explain client {int(scored['ID'].iloc[0])}",
+    ]:
         r = agent.ask(q)
         assert r.tables and len(r.tables[0]) > 0, q
 
@@ -155,12 +279,24 @@ def test_streamlit_app_renders(pipeline_run, monkeypatch):
 
 
 @pytest.mark.skipif(importlib.util.find_spec("azure.ai.ml") is None, reason="azure-ai-ml not installed")
-@pytest.mark.parametrize("script", ["pipeline/run_pipeline.py", "pipeline/run_batch_pipeline.py", "deploy/deploy_endpoint.py",
-                                    "monitoring/setup_model_monitor.py"])
+@pytest.mark.parametrize(
+    "script",
+    [
+        "pipeline/run_pipeline.py",
+        "pipeline/run_batch_pipeline.py",
+        "deploy/deploy_endpoint.py",
+        "monitoring/setup_model_monitor.py",
+    ],
+)
 def test_azure_specs_build(script):
     import subprocess
 
-    r = subprocess.run([sys.executable, str(ROOT / script), "--dry-run"], capture_output=True, text=True, cwd=ROOT,
-                       env=os.environ | {"PYTHONWARNINGS": "ignore"})
+    r = subprocess.run(
+        [sys.executable, str(ROOT / script), "--dry-run"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        env=os.environ | {"PYTHONWARNINGS": "ignore"},
+    )
     assert r.returncode == 0, r.stderr[-2000:]
     assert "Dry run OK" in r.stdout

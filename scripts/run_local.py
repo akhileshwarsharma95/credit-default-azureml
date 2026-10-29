@@ -56,38 +56,137 @@ def main() -> None:
 
     run_id = time.strftime("%Y%m%d-%H%M%S")
     w = out / "runs" / run_id
-    run("preprocess", ["--raw_data", args.raw_data, "--train_data", str(w / "prep/train"), "--test_data", str(w / "prep/test"),
-                       "--quality_report", str(w / "prep/quality")], env, out)
-    run("train", ["--train_data", str(w / "prep/train"), "--model_output", str(w / "train/model"), "--n_trials", str(args.n_trials)], env, out)
-    run("evaluate", ["--model_input", str(w / "train/model"), "--test_data", str(w / "prep/test"), "--evaluation_output", str(w / "evaluate"),
-                     "--model_name", args.model_name], env, out)
-    run("register", ["--model_input", str(w / "train/model"), "--evaluation_output", str(w / "evaluate"), "--model_name", args.model_name,
-                     "--model_info_output", str(w / "register"), "--git_sha", "local", "--data_version", "local"], env, out)
+    run(
+        "preprocess",
+        [
+            "--raw_data",
+            args.raw_data,
+            "--train_data",
+            str(w / "prep/train"),
+            "--test_data",
+            str(w / "prep/test"),
+            "--quality_report",
+            str(w / "prep/quality"),
+        ],
+        env,
+        out,
+    )
+    run(
+        "train",
+        [
+            "--train_data",
+            str(w / "prep/train"),
+            "--model_output",
+            str(w / "train/model"),
+            "--n_trials",
+            str(args.n_trials),
+        ],
+        env,
+        out,
+    )
+    run(
+        "evaluate",
+        [
+            "--model_input",
+            str(w / "train/model"),
+            "--test_data",
+            str(w / "prep/test"),
+            "--evaluation_output",
+            str(w / "evaluate"),
+            "--model_name",
+            args.model_name,
+        ],
+        env,
+        out,
+    )
+    run(
+        "register",
+        [
+            "--model_input",
+            str(w / "train/model"),
+            "--evaluation_output",
+            str(w / "evaluate"),
+            "--model_name",
+            args.model_name,
+            "--model_info_output",
+            str(w / "register"),
+            "--git_sha",
+            "local",
+            "--data_version",
+            "local",
+        ],
+        env,
+        out,
+    )
 
     info = json.loads((w / "register" / "model_info.json").read_text())
     package = out / "model_package"
     if info.get("registered"):
         if package.exists():
             shutil.rmtree(package)
-        mlflow.artifacts.download_artifacts(artifact_uri=f"models:/{args.model_name}/{info['version']}", dst_path=str(package))
+        mlflow.artifacts.download_artifacts(
+            artifact_uri=f"models:/{args.model_name}/{info['version']}", dst_path=str(package)
+        )
         (package / "REGISTRY_VERSION").write_text(f"{args.model_name}:{info['version']} (local registry)\n")
         print(f"\nRegistered version {info['version']} downloaded to {package}")
     elif not package.exists():
         raise SystemExit("Model was not registered and no previous package exists")
 
     batches = out / "batches"
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "make_batches.py"), "--raw_data", args.raw_data, "--dest", str(batches)], check=True, env=env)
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "make_batches.py"),
+            "--raw_data",
+            args.raw_data,
+            "--dest",
+            str(batches),
+        ],
+        check=True,
+        env=env,
+    )
     for name in ["stable", "downturn"]:
         b = w / f"batch_{name}"
-        run("score_batch", ["--model_input", str(package), "--scoring_data", str(batches / f"portfolio_{name}.csv"), "--scored_output", str(b / "scored")], env, out)
-        run("monitor_drift", ["--model_input", str(package), "--scored_data", str(b / "scored"), "--monitoring_output", str(b / "monitoring")], env, out)
-        run("portfolio_insights", ["--scored_data", str(b / "scored"), "--insights_output", str(b / "insights")], env, out)
+        run(
+            "score_batch",
+            [
+                "--model_input",
+                str(package),
+                "--scoring_data",
+                str(batches / f"portfolio_{name}.csv"),
+                "--scored_output",
+                str(b / "scored"),
+            ],
+            env,
+            out,
+        )
+        run(
+            "monitor_drift",
+            [
+                "--model_input",
+                str(package),
+                "--scored_data",
+                str(b / "scored"),
+                "--monitoring_output",
+                str(b / "monitoring"),
+            ],
+            env,
+            out,
+        )
+        run(
+            "portfolio_insights",
+            ["--scored_data", str(b / "scored"), "--insights_output", str(b / "insights")],
+            env,
+            out,
+        )
 
     latest = out / "latest"
     if latest.is_symlink() or latest.exists():
         latest.unlink() if latest.is_symlink() else shutil.rmtree(latest)
     latest.symlink_to(w, target_is_directory=True)
-    print(f"\nDone. Outputs in {w}\nMLflow UI: mlflow ui --backend-store-uri {tracking}\nApp: MODEL_DIR={package} streamlit run app/streamlit_app.py")
+    print(
+        f"\nDone. Outputs in {w}\nMLflow UI: mlflow ui --backend-store-uri {tracking}\nApp: MODEL_DIR={package} streamlit run app/streamlit_app.py"
+    )
 
 
 if __name__ == "__main__":

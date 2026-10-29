@@ -38,7 +38,14 @@ def build_profile(features: pd.DataFrame, scores, n_bins: int = 10, max_categori
     for col in features.columns:
         x = features[col].astype(float)
         spec = _categorical_spec(x) if x.nunique() <= max_categories else _numeric_spec(x.to_numpy(), n_bins)
-        spec.update({"mean": float(x.mean()), "std": float(x.std()), "p01": float(x.quantile(0.01)), "p99": float(x.quantile(0.99))})
+        spec.update(
+            {
+                "mean": float(x.mean()),
+                "std": float(x.std()),
+                "p01": float(x.quantile(0.01)),
+                "p99": float(x.quantile(0.99)),
+            }
+        )
         profile["features"][col] = spec
         profile["medians"][col] = float(x.median())
     profile["score"] = _numeric_spec(np.asarray(scores, dtype=float), n_bins)
@@ -68,7 +75,9 @@ def status(value: float, warn: float = PSI_WARN, alert: float = PSI_ALERT) -> st
     return "alert" if value >= alert else "warn" if value >= warn else "stable"
 
 
-def drift_report(profile: dict, features: pd.DataFrame, scores, warn: float = PSI_WARN, alert: float = PSI_ALERT) -> tuple[pd.DataFrame, dict]:
+def drift_report(
+    profile: dict, features: pd.DataFrame, scores, warn: float = PSI_WARN, alert: float = PSI_ALERT
+) -> tuple[pd.DataFrame, dict]:
     rows = []
     for col, spec in profile["features"].items():
         if col not in features.columns:
@@ -102,7 +111,11 @@ def drift_report(profile: dict, features: pd.DataFrame, scores, warn: float = PS
         "current_mean_pd": float(np.mean(scores)),
     }
     summary["drift_alert"] = bool(summary["score_status"] == "alert" or summary["n_features_alert"] > 0)
-    summary["overall_status"] = "alert" if summary["drift_alert"] else ("warn" if summary["score_status"] == "warn" or summary["n_features_warn"] else "stable")
+    summary["overall_status"] = (
+        "alert"
+        if summary["drift_alert"]
+        else ("warn" if summary["score_status"] == "warn" or summary["n_features_warn"] else "stable")
+    )
     return table, summary
 
 

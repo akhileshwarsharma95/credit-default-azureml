@@ -60,7 +60,9 @@ def segment_portfolio(scored: pd.DataFrame, n_segments: int = 5, seed: int = 42)
     for name, segs in groups.items():  # disambiguate duplicate names by limit size
         if len(segs) > 1:
             segs = sorted(segs, key=lambda s: centroids.loc[s, "LIMIT_BAL"])
-            suffixes = ["lower limit", "higher limit"] if len(segs) == 2 else [f"tier {i + 1}" for i in range(len(segs))]
+            suffixes = (
+                ["lower limit", "higher limit"] if len(segs) == 2 else [f"tier {i + 1}" for i in range(len(segs))]
+            )
             for s, suffix in zip(segs, suffixes):
                 names[s] = f"{name} - {suffix}"
     out = scored.copy()
@@ -70,7 +72,11 @@ def segment_portfolio(scored: pd.DataFrame, n_segments: int = 5, seed: int = 42)
 
 
 def roll_rate_matrix(roll_long: pd.DataFrame) -> pd.DataFrame:
-    m = roll_long.pivot(index="from_bucket", columns="to_bucket", values="roll_rate").reindex(index=BUCKETS, columns=BUCKETS).fillna(0.0)
+    m = (
+        roll_long.pivot(index="from_bucket", columns="to_bucket", values="roll_rate")
+        .reindex(index=BUCKETS, columns=BUCKETS)
+        .fillna(0.0)
+    )
     return m.div(m.sum(axis=1).replace(0, 1), axis=0)
 
 
@@ -82,11 +88,19 @@ def project_delinquency(scored: pd.DataFrame, matrix: pd.DataFrame, months: int 
     rows, dist = [], current
     for step in range(1, months + 1):
         dist = dist @ P
-        rows.append({"months_ahead": step, **{b: float(v) for b, v in zip(BUCKETS, dist)}, "delinquency_rate": float(dist[1:].sum())})
+        rows.append(
+            {
+                "months_ahead": step,
+                **{b: float(v) for b, v in zip(BUCKETS, dist)},
+                "delinquency_rate": float(dist[1:].sum()),
+            }
+        )
     return pd.DataFrame(rows)
 
 
-def portfolio_insights(scored: pd.DataFrame, n_segments: int = 5, top_n: int = 50, seed: int = 42) -> tuple[dict, dict[str, pd.DataFrame]]:
+def portfolio_insights(
+    scored: pd.DataFrame, n_segments: int = 5, top_n: int = 50, seed: int = 42
+) -> tuple[dict, dict[str, pd.DataFrame]]:
     scored = segment_portfolio(scored, n_segments, seed)
     for col in ("reason_1", "reason_2", "reason_3"):
         if col not in scored.columns:

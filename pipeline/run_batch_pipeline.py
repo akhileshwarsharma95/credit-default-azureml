@@ -16,7 +16,15 @@ import argparse
 import tempfile
 from pathlib import Path
 
-from pipeline.azure_utils import COMPONENTS, DEFAULTS, ensure_compute, ensure_data_asset, get_ml_client, resolve_model, stream_and_check
+from pipeline.azure_utils import (
+    COMPONENTS,
+    DEFAULTS,
+    ensure_compute,
+    ensure_data_asset,
+    get_ml_client,
+    resolve_model,
+    stream_and_check,
+)
 
 
 def build_pipeline(model_input, scoring_input, compute: str):
@@ -65,8 +73,11 @@ def main() -> None:
     from azure.ai.ml import Input
 
     if args.dry_run:
-        job = build_pipeline(Input(type="mlflow_model", path=f"azureml:{args.model_name}@latest"),
-                             Input(type="uri_file", path="azureml:credit-default-batch@latest"), args.compute)
+        job = build_pipeline(
+            Input(type="mlflow_model", path=f"azureml:{args.model_name}@latest"),
+            Input(type="uri_file", path="azureml:credit-default-batch@latest"),
+            args.compute,
+        )
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "batch.yml"
             job.dump(out)
@@ -78,7 +89,9 @@ def main() -> None:
     ensure_compute(ml_client, args.compute, DEFAULTS["vm_size"], DEFAULTS["max_nodes"])
     model = resolve_model(ml_client, args.model_name, args.model_version)
     batch = Path(args.batch)
-    asset = ensure_data_asset(ml_client, f"credit-default-batch-{batch.stem.replace('_', '-')}", batch, f"Scoring batch {batch.name}")
+    asset = ensure_data_asset(
+        ml_client, f"credit-default-batch-{batch.stem.replace('_', '-')}", batch, f"Scoring batch {batch.name}"
+    )
     print(f"Scoring {asset.name}:{asset.version} with {model.name}:{model.version} ({model.type})")
     job = build_pipeline(Input(type=model.type, path=model.id), Input(type="uri_file", path=asset.id), args.compute)
     job.tags = {"model_version": str(model.version), "batch": f"{asset.name}:{asset.version}"}

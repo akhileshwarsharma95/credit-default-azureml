@@ -50,13 +50,12 @@ addopts = "-p no:cacheprovider"
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning", "ignore::FutureWarning"]
 
 [tool.ruff]
-line-length = 160
+line-length = 120
 target-version = "py310"
-extend-exclude = ["outputs", "data"]
+extend-exclude = ["outputs", "data", "app/model", "docs/presentation/vendor"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
-ignore = ["E501", "B008", "UP007", "B905", "E702", "UP038"]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF", "PTH"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["creditrisk", "conftest", "azure_utils", "deploy_endpoint"]
+known-first-party = ["creditrisk", "pipeline", "deploy", "conftest"]

@@ -38,7 +38,9 @@ def report(kpis: dict, tables: dict) -> str:
         f"- Delinquency {kpis['current_delinquency']:.1%} today; roll-rate projection {kpis['projected_delinquency_3m']:.1%} in 3 months",
     ]
     if reduce is not None:
-        lines.append(f"- Limit reductions for {reduce['clients']:,.0f} high-risk clients cut EAD by {-reduce['ead_change']:,.0f} and expected loss by {-reduce['el_change']:,.0f}")
+        lines.append(
+            f"- Limit reductions for {reduce['clients']:,.0f} high-risk clients cut EAD by {-reduce['ead_change']:,.0f} and expected loss by {-reduce['el_change']:,.0f}"
+        )
     return "\n".join(lines) + "\n"
 
 

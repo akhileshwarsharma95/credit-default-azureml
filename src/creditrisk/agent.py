@@ -62,7 +62,9 @@ TOOLS = [
             "description": "Run one read-only DuckDB SELECT query against the portfolio tables. Returns up to 200 rows as JSON.",
             "parameters": {
                 "type": "object",
-                "properties": {"query": {"type": "string", "description": "A single SELECT (or WITH ... SELECT) statement."}},
+                "properties": {
+                    "query": {"type": "string", "description": "A single SELECT (or WITH ... SELECT) statement."}
+                },
                 "required": ["query"],
             },
         },
@@ -127,23 +129,38 @@ def _client_from_env():
 
 
 OFFLINE_TEMPLATES = [
-    (r"\b(kpi|overview|summary|headline)\b", "Portfolio headline KPIs",
-     "SELECT COUNT(*) AS clients, SUM(ead) AS total_ead, SUM(el) AS total_el, SUM(el)/SUM(ead) AS el_rate, AVG(pd) AS mean_pd, "
-     "AVG(flag) AS intervene_rate, AVG(\"default\") AS observed_dr FROM portfolio"),
+    (
+        r"\b(kpi|overview|summary|headline)\b",
+        "Portfolio headline KPIs",
+        "SELECT COUNT(*) AS clients, SUM(ead) AS total_ead, SUM(el) AS total_el, SUM(el)/SUM(ead) AS el_rate, AVG(pd) AS mean_pd, "
+        'AVG(flag) AS intervene_rate, AVG("default") AS observed_dr FROM portfolio',
+    ),
     (r"\b(backtest|calibrat|traffic)", "PD backtest by grade", "SELECT * FROM backtest"),
-    (r"\bgrade", "Exposure and expected loss by rating grade",
-     "SELECT grade, clients, client_share, mean_pd, observed_dr, ead, el, el_share FROM grade_summary ORDER BY grade"),
+    (
+        r"\bgrade",
+        "Exposure and expected loss by rating grade",
+        "SELECT grade, clients, client_share, mean_pd, observed_dr, ead, el, el_share FROM grade_summary ORDER BY grade",
+    ),
     (r"\bsegment|cluster", "Behavioural segments", "SELECT * FROM segment_summary ORDER BY mean_pd DESC"),
     (r"\b(stage|ifrs|ecl)\b", "IFRS 9 staging (illustrative)", "SELECT * FROM stage_summary ORDER BY stage"),
     (r"\blimit", "Limit steering recommendations", "SELECT * FROM limit_actions"),
     (r"\b(drift|psi|stability)\b", "Latest drift check", "SELECT * FROM drift ORDER BY psi DESC LIMIT 10"),
-    (r"\b(watch|early|warning|riskiest|top)\b", "Top early-warning clients by expected loss",
-     "SELECT ID, grade, ROUND(pd, 3) AS pd, action, ews_triggers, ROUND(el) AS el, reason_1, reason_2 FROM portfolio "
-     "WHERE action <> 'Standard' ORDER BY el DESC LIMIT 10"),
-    (r"\beducation\b", "Default rate and PD by education",
-     "SELECT EDUCATION, COUNT(*) AS clients, AVG(\"default\") AS observed_dr, AVG(pd) AS mean_pd FROM portfolio GROUP BY 1 ORDER BY 1"),
-    (r"\b(trend|delinquen|roll)", "Delinquency trend and 3-month projection",
-     "SELECT month, delinquency_rate, utilisation FROM delinquency_trend ORDER BY month_idx"),
+    (
+        r"\b(watch|early|warning|riskiest|top)\b",
+        "Top early-warning clients by expected loss",
+        "SELECT ID, grade, ROUND(pd, 3) AS pd, action, ews_triggers, ROUND(el) AS el, reason_1, reason_2 FROM portfolio "
+        "WHERE action <> 'Standard' ORDER BY el DESC LIMIT 10",
+    ),
+    (
+        r"\beducation\b",
+        "Default rate and PD by education",
+        'SELECT EDUCATION, COUNT(*) AS clients, AVG("default") AS observed_dr, AVG(pd) AS mean_pd FROM portfolio GROUP BY 1 ORDER BY 1',
+    ),
+    (
+        r"\b(trend|delinquen|roll)",
+        "Delinquency trend and 3-month projection",
+        "SELECT month, delinquency_rate, utilisation FROM delinquency_trend ORDER BY month_idx",
+    ),
 ]
 
 
@@ -219,20 +236,29 @@ class PortfolioAgent:
             with self._tracer.start_as_current_span("agent.llm_call") as span:
                 span.set_attribute("gen_ai.system", self.provider)
                 span.set_attribute("gen_ai.request.model", self.model or "")
-                resp = self.client.chat.completions.create(model=self.model, messages=messages, tools=TOOLS, temperature=0)
+                resp = self.client.chat.completions.create(
+                    model=self.model, messages=messages, tools=TOOLS, temperature=0
+                )
                 usage = getattr(resp, "usage", None)
                 if usage is not None:
                     span.set_attribute("gen_ai.usage.input_tokens", usage.prompt_tokens)
                     span.set_attribute("gen_ai.usage.output_tokens", usage.completion_tokens)
             msg = resp.choices[0].message
             result.steps.append(
-                Step("llm", self.model or "llm", (msg.content or "tool call")[:300], round((time.perf_counter() - start) * 1000, 1),
-                     getattr(usage, "total_tokens", 0) if usage else 0)
+                Step(
+                    "llm",
+                    self.model or "llm",
+                    (msg.content or "tool call")[:300],
+                    round((time.perf_counter() - start) * 1000, 1),
+                    getattr(usage, "total_tokens", 0) if usage else 0,
+                )
             )
             if not msg.tool_calls:
                 result.answer = msg.content or ""
                 return result
-            messages.append({"role": "assistant", "content": msg.content, "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
+            messages.append(
+                {"role": "assistant", "content": msg.content, "tool_calls": [tc.model_dump() for tc in msg.tool_calls]}
+            )
             for tc in msg.tool_calls:
                 start = time.perf_counter()
                 try:

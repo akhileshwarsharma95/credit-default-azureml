@@ -77,7 +77,8 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         # PAY_AMT1 (paid in Sep) settles the Aug statement (BILL_AMT2), and so on.
         X["pay_ratio_1"] = (pays["PAY_AMT1"] / bills["BILL_AMT2"].clip(lower=1)).clip(0, 5)
         X["pay_ratio_avg"] = (
-            pays[PAY_AMT[:5]].sum(axis=1).to_numpy() / bills[BILL_AMT[1:]].clip(lower=0).sum(axis=1).clip(lower=1).to_numpy()
+            pays[PAY_AMT[:5]].sum(axis=1).to_numpy()
+            / bills[BILL_AMT[1:]].clip(lower=0).sum(axis=1).clip(lower=1).to_numpy()
         ).clip(0, 5)
         late = status >= 1
         X["n_delays"] = late.sum(axis=1)

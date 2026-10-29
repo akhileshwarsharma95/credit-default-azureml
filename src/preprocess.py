@@ -49,7 +49,9 @@ def main(argv=None) -> None:
         if not post.passed or post.soft_failures:
             raise SystemExit(f"Cleaned data still violates the schema: {post.hard_failures + post.soft_failures}")
 
-        train, test = train_test_split(clean_checked, test_size=args.test_size, stratify=clean_checked[TARGET], random_state=args.random_state)
+        train, test = train_test_split(
+            clean_checked, test_size=args.test_size, stratify=clean_checked[TARGET], random_state=args.random_state
+        )
         for frame, folder, name in [(train, args.train_data, "train.csv"), (test, args.test_data, "test.csv")]:
             Path(folder).mkdir(parents=True, exist_ok=True)
             frame.to_csv(Path(folder) / name, index=False)
@@ -75,7 +77,9 @@ def main(argv=None) -> None:
                 "test_default_rate": summary["test_default_rate"],
             }
         )
-        print(f"Preprocessing done: {len(train):,} train / {len(test):,} test rows, default rate {summary['train_default_rate']:.3f}")
+        print(
+            f"Preprocessing done: {len(train):,} train / {len(test):,} test rows, default rate {summary['train_default_rate']:.3f}"
+        )
 
 
 if __name__ == "__main__":

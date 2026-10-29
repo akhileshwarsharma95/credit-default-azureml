@@ -57,8 +57,14 @@ def main(argv=None) -> None:
 
         table.to_csv(out / "drift_table.csv", index=False)
         write_json(summary, out / "drift_summary.json")
-        write_json({"alert": summary["drift_alert"], "status": summary["overall_status"],
-                    "action": "Open incident per RUNBOOK section 'Drift alert'" if summary["drift_alert"] else "none"}, out / "alert.json")
+        write_json(
+            {
+                "alert": summary["drift_alert"],
+                "status": summary["overall_status"],
+                "action": "Open incident per RUNBOOK section 'Drift alert'" if summary["drift_alert"] else "none",
+            },
+            out / "alert.json",
+        )
         plots.save(plots.psi_bars(table, warn=args.psi_warn, alert=args.psi_alert), out / "plots" / "psi.png")
         plots.save(plots.score_shift(pkg.profile["score"], scored["pd"]), out / "plots" / "score_shift.png")
 
@@ -66,8 +72,10 @@ def main(argv=None) -> None:
         mlflow.set_tag("drift_status", summary["overall_status"])
         mlflow.log_artifacts(str(out), artifact_path="monitoring")
         banner = "DRIFT ALERT" if summary["drift_alert"] else summary["overall_status"].upper()
-        print(f"[{banner}] score PSI {summary['score_psi']:.3f} | max feature PSI {summary['max_feature_psi']:.3f} | "
-              f"{summary['n_features_alert']} features in alert | mean PD {summary['reference_mean_pd']:.3f} -> {summary['current_mean_pd']:.3f}")
+        print(
+            f"[{banner}] score PSI {summary['score_psi']:.3f} | max feature PSI {summary['max_feature_psi']:.3f} | "
+            f"{summary['n_features_alert']} features in alert | mean PD {summary['reference_mean_pd']:.3f} -> {summary['current_mean_pd']:.3f}"
+        )
         if not table.empty:
             print(pd.DataFrame(table.head(5)).to_string(index=False))
 
