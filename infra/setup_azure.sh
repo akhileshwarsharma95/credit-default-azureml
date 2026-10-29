@@ -39,6 +39,7 @@ AZURE_RESOURCE_GROUP=$RG
 AZUREML_WORKSPACE=$WS
 AZURE_LOCATION=$LOCATION
 EOF
+[[ -n "${AZUREML_VM_SIZE:-}" ]] && echo "AZUREML_VM_SIZE=$AZUREML_VM_SIZE" >> .env
 echo "Wrote .env"
 
 if [[ -n "$GITHUB_REPO" ]]; then
@@ -52,11 +53,20 @@ if [[ -n "$GITHUB_REPO" ]]; then
   for i in 1 2 3 4 5; do  # the new service principal can take a moment to replicate
     az role assignment create --assignee "$APP_ID" --role Contributor --scope "$SCOPE" -o none && break || sleep 15
   done
-  for pair in "main:repo:$GITHUB_REPO:ref:refs/heads/main" "production:repo:$GITHUB_REPO:environment:production" "pr:repo:$GITHUB_REPO:pull_request"; do
-    name="gh-${pair%%:*}"; subject="${pair#*:}"
-    az ad app federated-credential create --id "$APP_ID" --only-show-errors -o none --parameters \
-      "{\"name\":\"$name\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$subject\",\"audiences\":[\"api://AzureADTokenExchange\"]}" \
-      2>/dev/null || echo "  federated credential $name already exists"
+  # Newer repos send immutable-ID subjects (repo:owner@<id>/repo@<id>:...); register both formats
+  PREFIXES="repo:$GITHUB_REPO"
+  if command -v gh >/dev/null 2>&1; then
+    ID_PREFIX=$(gh api "repos/$GITHUB_REPO/actions/oidc/customization/sub" --jq '.sub_claim_prefix // empty' 2>/dev/null || true)
+    [[ -n "$ID_PREFIX" && "$ID_PREFIX" != "repo:$GITHUB_REPO" ]] && PREFIXES="$PREFIXES $ID_PREFIX"
+  fi
+  for prefix in $PREFIXES; do
+    suffix=""; [[ "$prefix" == "repo:$GITHUB_REPO" ]] || suffix="-id"
+    for pair in "main:ref:refs/heads/main" "production:environment:production" "pr:pull_request"; do
+      name="gh-${pair%%:*}$suffix"; subject="$prefix:${pair#*:}"
+      az ad app federated-credential create --id "$APP_ID" --only-show-errors -o none --parameters \
+        "{\"name\":\"$name\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$subject\",\"audiences\":[\"api://AzureADTokenExchange\"]}" \
+        2>/dev/null || echo "  federated credential $name already exists"
+    done
   done
   echo
   echo "Add these to GitHub -> Settings -> Secrets and variables -> Actions:"
