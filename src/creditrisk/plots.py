@@ -11,11 +11,11 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
-from sklearn.metrics import precision_recall_curve, roc_curve  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
+from sklearn.metrics import precision_recall_curve, roc_curve
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -205,7 +205,7 @@ def backtest(bt: pd.DataFrame):
             color=INK2,
         )
     ax.plot([], [], "o", color=MUTED, ms=9, label="Observed DR (coloured by Jeffreys test)")
-    ax.set_xticks(x, [f"{g}\n{r}" for g, r in zip(bt["grade"], bt["pd_range"])])
+    ax.set_xticks(x, [f"{g}\n{r}" for g, r in zip(bt["grade"], bt["pd_range"], strict=False)])
     ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
     ax.set_ylabel("Default rate")
     ax.set_title("PD backtest by rating grade", pad=18)
@@ -227,7 +227,7 @@ def importance(imp: pd.DataFrame, top: int = 15):
 def fairness(table: pd.DataFrame, threshold: float):
     attrs = list(dict.fromkeys(table["attribute"]))
     fig, axes = plt.subplots(1, len(attrs), figsize=(4.2 * len(attrs), 3.6), squeeze=False, sharex=True)
-    for ax, attr in zip(axes[0], attrs):
+    for ax, attr in zip(axes[0], attrs, strict=False):
         t = table[table["attribute"] == attr]
         t = t.iloc[sorted(range(len(t)), key=lambda i: str(t["group"].iloc[i]).replace("<", "0"), reverse=True)]
         labels = t["group"].astype(str)
@@ -351,7 +351,7 @@ def waterfall(contrib_row: pd.Series, feature_row: pd.Series, base_value: float,
     fig, ax = plt.subplots(figsize=(7.5, 0.38 * len(items) + 1.4))
     vals = np.array([v for _, v in items])
     left = base_value + np.cumsum(vals) - vals  # bottom (smallest) to top (largest driver)
-    for i, ((_label, v), l0) in enumerate(zip(items, left)):
+    for i, ((_label, v), l0) in enumerate(zip(items, left, strict=False)):
         ax.barh(i, v, left=l0, height=0.55, color=SERIES[7] if v > 0 else SERIES[0])
         ax.text(
             l0 + v + (0.02 if v > 0 else -0.02),

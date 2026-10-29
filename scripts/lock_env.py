@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import subprocess
 import tempfile
-import tomllib
 from pathlib import Path
+
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDE_NEWER = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["uv"]["exclude-newer"]

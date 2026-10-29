@@ -68,7 +68,7 @@ def main(argv=None) -> None:
         plots.save(plots.psi_bars(table, warn=args.psi_warn, alert=args.psi_alert), out / "plots" / "psi.png")
         plots.save(plots.score_shift(pkg.profile["score"], scored["pd"]), out / "plots" / "score_shift.png")
 
-        log_metrics({k: v for k, v in summary.items() if not isinstance(v, (dict, str))})
+        log_metrics({k: v for k, v in summary.items() if not isinstance(v, dict | str)})
         mlflow.set_tag("drift_status", summary["overall_status"])
         mlflow.log_artifacts(str(out), artifact_path="monitoring")
         banner = "DRIFT ALERT" if summary["drift_alert"] else summary["overall_status"].upper()

@@ -21,8 +21,9 @@ import os
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
+
+ROOT = Path(__file__).resolve().parents[1]
 
 BASE_IMAGE = "mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest"
 

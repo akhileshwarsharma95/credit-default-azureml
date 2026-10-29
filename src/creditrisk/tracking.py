@@ -17,7 +17,7 @@ def _clean(d: dict, prefix: str = "") -> dict:
     for k, v in d.items():
         if isinstance(v, bool):
             v = int(v)
-        if isinstance(v, (int, float)) and not (isinstance(v, float) and (math.isnan(v) or math.isinf(v))):
+        if isinstance(v, int | float) and not (isinstance(v, float) and (math.isnan(v) or math.isinf(v))):
             out[f"{prefix}{k}"] = float(v)
     return out
 
@@ -29,7 +29,7 @@ def log_metrics(d: dict, prefix: str = "") -> None:
 
 
 def log_params(d: dict) -> None:
-    mlflow.log_params({k: (json.dumps(v) if isinstance(v, (list, dict, tuple)) else v) for k, v in d.items()})
+    mlflow.log_params({k: (json.dumps(v) if isinstance(v, list | dict | tuple) else v) for k, v in d.items()})
 
 
 def log_table(df: pd.DataFrame, artifact_path: str) -> None:

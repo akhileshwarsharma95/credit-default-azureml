@@ -20,13 +20,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-ROOT = Path(__file__).resolve().parents[1]
-
 from creditrisk import drift, explain, insights, metrics, policy
 from creditrisk.agent import PortfolioAgent
 from creditrisk.observability import configure, timed
 from creditrisk.schema import EDUCATION_LABELS, MONTHS, PAY_STATUS_LABELS, describe
 from creditrisk.scoring import load_package, score_frame
+
+ROOT = Path(__file__).resolve().parents[1]
 
 configure("credit-risk-app")
 st.set_page_config(page_title="Credit Risk Cockpit", page_icon=":material/monitoring:", layout="wide")
@@ -71,29 +71,29 @@ def style(fig: go.Figure, title: str | None = None, height: int = 330, legend: b
     fig.update_layout(
         paper_bgcolor=SURFACE,
         plot_bgcolor=SURFACE,
-        font=dict(family="system-ui, -apple-system, Segoe UI, sans-serif", color=INK2, size=12),
-        margin=dict(l=10, r=10, t=30 if legend else 10, b=10),
+        font={"family": "system-ui, -apple-system, Segoe UI, sans-serif", "color": INK2, "size": 12},
+        margin={"l": 10, "r": 10, "t": 30 if legend else 10, "b": 10},
         height=height,
         showlegend=legend,
-        legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="right", x=1, font=dict(color=INK2)),
-        hoverlabel=dict(bgcolor="white", font_color=INK),
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.0, "xanchor": "right", "x": 1, "font": {"color": INK2}},
+        hoverlabel={"bgcolor": "white", "font_color": INK},
         bargap=0.45,
     )
     fig.update_xaxes(
         gridcolor=GRID,
         linecolor=AXIS,
         zeroline=False,
-        tickfont=dict(color=INK2),
+        tickfont={"color": INK2},
         automargin=True,
-        title_font=dict(color=INK2),
+        title_font={"color": INK2},
     )
     fig.update_yaxes(
         gridcolor=GRID,
         linecolor=AXIS,
         zeroline=False,
-        tickfont=dict(color=INK2),
+        tickfont={"color": INK2},
         automargin=True,
-        title_font=dict(color=INK2),
+        title_font={"color": INK2},
     )
     return fig
 
@@ -222,7 +222,7 @@ with tab_portfolio:
             text=f"{worst['el_share']:.0%} of EL",
             showarrow=False,
             yshift=12,
-            font=dict(color=INK),
+            font={"color": INK},
         )
         show(style(fig, "Expected loss by rating grade", legend=False))
     with right:
@@ -233,7 +233,7 @@ with tab_portfolio:
                 y=g["mean_pd"],
                 mode="markers",
                 name="Mean PD",
-                marker=dict(size=12, color=SURFACE, line=dict(color=INK2, width=2)),
+                marker={"size": 12, "color": SURFACE, "line": {"color": INK2, "width": 2}},
             )
         )
         fig.add_trace(
@@ -242,7 +242,7 @@ with tab_portfolio:
                 y=g["observed_dr"],
                 mode="markers",
                 name="Observed default rate",
-                marker=dict(size=12, color=ORANGE, line=dict(color=SURFACE, width=2)),
+                marker={"size": 12, "color": ORANGE, "line": {"color": SURFACE, "width": 2}},
             )
         )
         fig.update_yaxes(tickformat=".0%")
@@ -259,8 +259,8 @@ with tab_portfolio:
                 y=trend["delinquency_rate"],
                 mode="lines+markers",
                 name="Actual",
-                line=dict(color=BLUE, width=2),
-                marker=dict(size=8, line=dict(color=SURFACE, width=2)),
+                line={"color": BLUE, "width": 2},
+                marker={"size": 8, "line": {"color": SURFACE, "width": 2}},
             )
         )
         months_ahead = ["Oct", "Nov", "Dec"][: len(proj)]
@@ -270,8 +270,8 @@ with tab_portfolio:
                 y=[last["delinquency_rate"], *proj["delinquency_rate"]],
                 mode="lines+markers",
                 name="Roll-rate projection",
-                line=dict(color=BLUE, width=2, dash="dot"),
-                marker=dict(size=8, line=dict(color=SURFACE, width=2)),
+                line={"color": BLUE, "width": 2, "dash": "dot"},
+                marker={"size": 8, "line": {"color": SURFACE, "width": 2}},
             )
         )
         fig.update_yaxes(tickformat=".0%")
@@ -486,7 +486,7 @@ with tab_policy:
                 x=curve["threshold"],
                 y=curve["expected_cost_per_client"],
                 mode="lines",
-                line=dict(color=BLUE, width=2),
+                line={"color": BLUE, "width": 2},
                 name="Expected cost",
                 hovertemplate="cut-off %{x:.2f}: cost %{y:.3f}<extra></extra>",
             )
@@ -504,7 +504,7 @@ with tab_policy:
                 y=[best["expected_cost_per_client"]],
                 mode="markers",
                 name="Empirical minimum",
-                marker=dict(size=11, color=ORANGE, line=dict(color=SURFACE, width=2)),
+                marker={"size": 11, "color": ORANGE, "line": {"color": SURFACE, "width": 2}},
             )
         )
         fig.update_xaxes(title="PD cut-off")
@@ -517,19 +517,19 @@ with tab_policy:
                 x=curve["flagged_rate"],
                 y=curve["recall"],
                 mode="lines",
-                line=dict(color=BLUE, width=2),
+                line={"color": BLUE, "width": 2},
                 name="Model",
                 hovertemplate="flag %{x:.0%} -> catch %{y:.0%}<extra></extra>",
             )
         )
-        fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", line=dict(color=AXIS, width=1), name="Random"))
+        fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", line={"color": AXIS, "width": 1}, name="Random"))
         fig.add_trace(
             go.Scatter(
                 x=[tm["flagged_rate"]],
                 y=[tm["recall"]],
                 mode="markers",
                 name="Current cut-off",
-                marker=dict(size=11, color=ORANGE, line=dict(color=SURFACE, width=2)),
+                marker={"size": 11, "color": ORANGE, "line": {"color": SURFACE, "width": 2}},
             )
         )
         fig.update_xaxes(title="Share of clients flagged", tickformat=".0%")
@@ -688,7 +688,7 @@ with tab_agent:
     clicked = None
     for row_start in (0, 3):
         cols = st.columns(3)
-        for q, col in zip(examples[row_start : row_start + 3], cols):
+        for q, col in zip(examples[row_start : row_start + 3], cols, strict=False):
             if col.button(q, width="stretch", key=f"ex_{q}"):
                 clicked = q
     st.session_state.setdefault("chat", [])

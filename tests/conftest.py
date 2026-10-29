@@ -47,7 +47,7 @@ def make_synthetic(n: int = 3000, seed: int = 0) -> pd.DataFrame:
 
 def write_uci_xlsx(df: pd.DataFrame, path: Path) -> Path:
     top = [""] + [f"X{i}" for i in range(1, 24)] + ["Y"]
-    pd.DataFrame([top, list(df.columns)] + df.values.tolist()).to_excel(path, index=False, header=False)
+    pd.DataFrame([top, list(df.columns), *df.values.tolist()]).to_excel(path, index=False, header=False)
     return path
 
 

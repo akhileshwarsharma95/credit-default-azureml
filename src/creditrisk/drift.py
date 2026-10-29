@@ -30,7 +30,7 @@ def _numeric_spec(x: np.ndarray, n_bins: int) -> dict:
 
 def _categorical_spec(x: pd.Series) -> dict:
     shares = x.round(_DECIMALS).value_counts(normalize=True).sort_index()
-    return {"type": "categorical", "categories": [float(c) for c in shares.index], "expected": shares.tolist() + [0.0]}
+    return {"type": "categorical", "categories": [float(c) for c in shares.index], "expected": [*shares.tolist(), 0.0]}
 
 
 def build_profile(features: pd.DataFrame, scores, n_bins: int = 10, max_categories: int = 12) -> dict:

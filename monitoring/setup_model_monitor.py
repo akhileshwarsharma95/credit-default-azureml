@@ -17,7 +17,6 @@ import argparse
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 from deploy.deploy_endpoint import default_endpoint_name
 from pipeline.azure_utils import get_ml_client
 

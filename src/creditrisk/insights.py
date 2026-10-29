@@ -63,7 +63,7 @@ def segment_portfolio(scored: pd.DataFrame, n_segments: int = 5, seed: int = 42)
             suffixes = (
                 ["lower limit", "higher limit"] if len(segs) == 2 else [f"tier {i + 1}" for i in range(len(segs))]
             )
-            for s, suffix in zip(segs, suffixes):
+            for s, suffix in zip(segs, suffixes, strict=False):
                 names[s] = f"{name} - {suffix}"
     out = scored.copy()
     out["segment"] = labels
@@ -91,7 +91,7 @@ def project_delinquency(scored: pd.DataFrame, matrix: pd.DataFrame, months: int 
         rows.append(
             {
                 "months_ahead": step,
-                **{b: float(v) for b, v in zip(BUCKETS, dist)},
+                **{b: float(v) for b, v in zip(BUCKETS, dist, strict=False)},
                 "delinquency_rate": float(dist[1:].sum()),
             }
         )

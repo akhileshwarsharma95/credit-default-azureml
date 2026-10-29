@@ -12,9 +12,10 @@ import shutil
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 from creditrisk.scoring import find_model_dir
 from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:

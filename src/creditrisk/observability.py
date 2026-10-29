@@ -76,7 +76,7 @@ def get_logger(name: str) -> logging.Logger:
 def log_event(logger: logging.Logger, event: str, **properties) -> None:
     """Structured event; properties become customDimensions in Application Insights."""
     logger.info(
-        event, extra={k: (v if isinstance(v, (int, float, str, bool)) else str(v)) for k, v in properties.items()}
+        event, extra={k: (v if isinstance(v, int | float | str | bool) else str(v)) for k, v in properties.items()}
     )
 
 

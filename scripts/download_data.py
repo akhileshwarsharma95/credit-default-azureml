@@ -24,7 +24,7 @@ def from_uci(dest: Path) -> Path:
     with zipfile.ZipFile(io.BytesIO(blob)) as z:
         name = next(n for n in z.namelist() if n.lower().endswith((".xls", ".xlsx")))
         target = dest / ("default_of_credit_card_clients" + Path(name).suffix.lower())
-        with z.open(name) as src, open(target, "wb") as dst:
+        with z.open(name) as src, target.open("wb") as dst:
             shutil.copyfileobj(src, dst)
     return target
 

@@ -13,12 +13,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-
 from sklearn.model_selection import train_test_split
 
 from creditrisk import drift, quality
 from creditrisk.schema import TARGET, load_raw
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
