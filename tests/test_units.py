@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import ast
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from conftest import make_synthetic
+from conftest import ROOT, make_synthetic
 from creditrisk import drift, metrics, policy, quality
 from creditrisk.agent import SqlGuardError, guard_sql
 from creditrisk.features import ENGINEERED, FeatureEngineer
@@ -122,3 +124,12 @@ def test_duckdb_external_access_locked():
     assert con.execute("SELECT SUM(a) FROM t").fetchone()[0] == 3
     with pytest.raises(duckdb.Error):
         con.execute("SELECT * FROM read_csv_auto('/etc/hostname')").fetchall()
+
+
+def test_step_scripts_import_only_creditrisk_and_third_party():
+    # Azure step environments do not install pipeline/ or deploy/
+    for script in (ROOT / "src").glob("*.py"):
+        tree = ast.parse(script.read_text())
+        names = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
+        names |= {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
+        assert not names & {"pipeline", "deploy", "azure_utils"}, script.name

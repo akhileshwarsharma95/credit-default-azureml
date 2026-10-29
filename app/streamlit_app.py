@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -22,13 +21,12 @@ import plotly.graph_objects as go
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
 
-from creditrisk import drift, explain, insights, metrics, policy  # noqa: E402
-from creditrisk.agent import PortfolioAgent  # noqa: E402
-from creditrisk.observability import configure, timed  # noqa: E402
-from creditrisk.schema import EDUCATION_LABELS, MONTHS, PAY_STATUS_LABELS, describe  # noqa: E402
-from creditrisk.scoring import load_package, score_frame  # noqa: E402
+from creditrisk import drift, explain, insights, metrics, policy
+from creditrisk.agent import PortfolioAgent
+from creditrisk.observability import configure, timed
+from creditrisk.schema import EDUCATION_LABELS, MONTHS, PAY_STATUS_LABELS, describe
+from creditrisk.scoring import load_package, score_frame
 
 configure("credit-risk-app")
 st.set_page_config(page_title="Credit Risk Cockpit", page_icon=":material/monitoring:", layout="wide")

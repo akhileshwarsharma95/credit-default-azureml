@@ -9,15 +9,12 @@ from __future__ import annotations
 
 import argparse
 import shutil
-import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "pipeline"))
-sys.path.insert(0, str(ROOT / "src"))
-from azure_utils import DEFAULTS, get_ml_client, resolve_model  # noqa: E402
-from creditrisk.scoring import find_model_dir  # noqa: E402
+from creditrisk.scoring import find_model_dir
+from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
 
 
 def main() -> None:

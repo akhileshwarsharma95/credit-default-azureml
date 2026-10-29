@@ -11,16 +11,14 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
 
-from sklearn.model_selection import train_test_split  # noqa: E402
+from sklearn.model_selection import train_test_split
 
-from creditrisk import drift, quality  # noqa: E402
-from creditrisk.schema import TARGET, load_raw  # noqa: E402
+from creditrisk import drift, quality
+from creditrisk.schema import TARGET, load_raw
 
 
 def main() -> None:

@@ -14,15 +14,12 @@ which covers batch-scored portfolios and also checks realised performance.
 from __future__ import annotations
 
 import argparse
-import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "pipeline"))
-sys.path.insert(0, str(ROOT / "deploy"))
-from azure_utils import get_ml_client  # noqa: E402
-from deploy_endpoint import default_endpoint_name  # noqa: E402
+from deploy.deploy_endpoint import default_endpoint_name
+from pipeline.azure_utils import get_ml_client
 
 
 def build_schedule(endpoint: str, deployment: str, emails: list[str], hour: int):

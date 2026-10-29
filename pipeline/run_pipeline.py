@@ -19,8 +19,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from azure_utils import COMPONENTS, DEFAULTS, ROOT, ensure_compute, ensure_data_asset, get_ml_client, git_sha, stream_and_check  # noqa: E402
+from pipeline.azure_utils import COMPONENTS, DEFAULTS, ROOT, ensure_compute, ensure_data_asset, get_ml_client, git_sha, stream_and_check
 
 
 def build_pipeline(raw_data, compute: str, args, data_version: str, sha: str):

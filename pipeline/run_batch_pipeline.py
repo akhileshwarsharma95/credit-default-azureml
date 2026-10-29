@@ -13,12 +13,10 @@ Create the demo batches first with: python scripts/make_batches.py
 from __future__ import annotations
 
 import argparse
-import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from azure_utils import COMPONENTS, DEFAULTS, ensure_compute, ensure_data_asset, get_ml_client, resolve_model, stream_and_check  # noqa: E402
+from pipeline.azure_utils import COMPONENTS, DEFAULTS, ensure_compute, ensure_data_asset, get_ml_client, resolve_model, stream_and_check
 
 
 def build_pipeline(model_input, scoring_input, compute: str):

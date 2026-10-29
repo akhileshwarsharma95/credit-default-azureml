@@ -18,13 +18,11 @@ import argparse
 import hashlib
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "pipeline"))
-from azure_utils import DEFAULTS, get_ml_client, resolve_model  # noqa: E402
+from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
 
 BASE_IMAGE = "mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest"
 
