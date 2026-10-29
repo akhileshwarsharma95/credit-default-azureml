@@ -85,4 +85,4 @@ if [[ -n "$GITHUB_REPO" ]]; then
     fi
   fi
 fi
-echo "Done. Next: python pipeline/run_pipeline.py --wait"
+echo "Done. Next: make train"

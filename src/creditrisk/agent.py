@@ -269,11 +269,7 @@ class PortfolioAgent:
                     result.tables.append(df)
                     content = df.head(50).to_json(orient="records", date_format="iso", double_precision=4)
                     detail = query
-                except (
-                    SqlGuardError,
-                    duckdb.Error,
-                    json.JSONDecodeError,
-                ) as exc:  # back to the model so it can fix its SQL
+                except Exception as exc:  # noqa: BLE001 - any tool error goes back to the model so it can fix its call
                     content = json.dumps({"error": str(exc)})
                     detail = f"ERROR: {exc}"
                 result.steps.append(Step("tool", "run_sql", detail, round((time.perf_counter() - start) * 1000, 1)))

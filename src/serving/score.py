@@ -81,6 +81,8 @@ def _bad_request(message: str, **extra):
 
 def _parse(raw_data) -> pd.DataFrame:
     payload = json.loads(raw_data) if isinstance(raw_data, str | bytes) else raw_data
+    if not isinstance(payload, dict):
+        raise ValueError("Expected a JSON object with 'clients' or 'input_data'")
     if "input_data" in payload:
         d = payload["input_data"]
         return pd.DataFrame(d["data"], columns=d["columns"])

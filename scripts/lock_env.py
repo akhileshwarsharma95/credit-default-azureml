@@ -86,7 +86,7 @@ def main() -> None:
         "# Online endpoint environment (managed online deployment, custom scoring script).\n"
         "# Fully pinned lock for Python 3.10 / linux-64 from environments/serving-requirements.in.",
     )
-    LOGGER.info("Re-run `pytest` and `python scripts/run_local.py` with the new pins before committing.")
+    LOGGER.info("Re-run `make check` and `make local` with the new pins before committing.")
 
 
 if __name__ == "__main__":

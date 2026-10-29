@@ -1,6 +1,5 @@
 # One target per task; each calls the real command (see README "Commands").
-ENDPOINT     ?= credit-risk-fb1504
-ENDPOINT_SKU ?= Standard_D2as_v4
+ENDPOINT      = $(shell uv run python -c 'from deploy.deploy_endpoint import default_endpoint_name; print(default_endpoint_name())' 2>/dev/null)
 RG           ?= rg-credit-risk
 WS           ?= mlw-credit-risk
 
@@ -46,13 +45,13 @@ batch-monitor:  ## Batch scoring + drift monitoring on the downturn batch (Azure
 	uv run python pipeline/run_batch_pipeline.py --batch data/batches/portfolio_downturn.csv --wait
 
 deploy:  ## Blue/green deployment of the latest registered model
-	uv run python deploy/deploy_endpoint.py --instance-type $(ENDPOINT_SKU)
+	uv run python deploy/deploy_endpoint.py
 
 invoke:  ## Score the sample request on the online endpoint
 	az ml online-endpoint invoke -n $(ENDPOINT) -r deploy/sample_request.json -g $(RG) -w $(WS)
 
 delete-endpoint:  ## Delete the online endpoint (stops hourly billing)
-	uv run python deploy/deploy_endpoint.py --delete --endpoint-name $(ENDPOINT)
+	uv run python deploy/deploy_endpoint.py --delete
 
 lock:  ## Relock and regenerate the Azure and container environment files
 	uv lock && uv run python scripts/lock_env.py && { echo "# Streamlit app container (Python 3.10): the app group and the creditrisk runtime from uv.lock. Regenerate with make lock."; uv export --no-default-groups --group app --no-hashes --no-emit-project --no-header --no-annotate --quiet; } > app/requirements.txt

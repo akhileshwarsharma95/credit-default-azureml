@@ -99,10 +99,10 @@ Requires [uv](https://docs.astral.sh/uv/) (it installs Python 3.10–3.13 and th
 | `make train` | Training pipeline on Azure ML, streams logs | `uv run python pipeline/run_pipeline.py --wait` |
 | `make batches` | Stable and downturn demo batches | `uv run python scripts/make_batches.py` |
 | `make batch-monitor` | Batch scoring + drift monitor on the downturn batch | `uv run python pipeline/run_batch_pipeline.py --batch data/batches/portfolio_downturn.csv --wait` |
-| `make deploy` | Blue/green deployment of the latest registered model | `uv run python deploy/deploy_endpoint.py --instance-type Standard_D2as_v4` |
+| `make deploy` | Blue/green deployment of the latest registered model | `uv run python deploy/deploy_endpoint.py` |
 | `make invoke` | Score `deploy/sample_request.json` on the endpoint | `az ml online-endpoint invoke -n <endpoint> -r deploy/sample_request.json -g rg-credit-risk -w mlw-credit-risk` |
 | `make delete-endpoint` | Delete the endpoint (stops hourly billing) | `uv run python deploy/deploy_endpoint.py --delete` |
-| `make lock` | Relock; regenerate the Azure and container environment files | `uv lock && uv run python scripts/lock_env.py` (+ `uv export` for `app/requirements.txt`) |
+| `make lock` | Relock; regenerate the Azure and container environment files | `uv lock && uv run python scripts/lock_env.py`, then the `uv export` line in the `Makefile` |
 
 Parameters (costs, LGD/CCF, PD floor, master scale, registration gate, drift thresholds, training and Azure settings) live in `src/creditrisk/config.yaml`; command-line flags and `AZURE_*` / `AZUREML_*` environment variables override them.
 

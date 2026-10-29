@@ -240,6 +240,7 @@ def test_endpoint_scoring_script(pipeline_run, monkeypatch):
     assert "error" in score.run(json.dumps({"clients": [{"LIMIT_BAL": 1}]}))
     row = test.drop(columns=["default"]).to_dict(orient="records")[0]
     assert "error" in score.run(json.dumps({"clients": [{**row, "LIMIT_BAL": "abc"}]}))
+    assert "error" in score.run(json.dumps([row]))  # a list instead of a JSON object
 
 
 def test_agent_offline_answers(pipeline_run):

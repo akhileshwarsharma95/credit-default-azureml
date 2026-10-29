@@ -8,7 +8,7 @@ source .env 2>/dev/null || true
 RG="${AZURE_RESOURCE_GROUP:?}"; LOCATION="${AZURE_LOCATION:-germanywestcentral}"
 APP="${APP_NAME:-credit-risk-app}"; ENV_NAME="${ACA_ENVIRONMENT:-credit-risk-env}"
 
-python scripts/fetch_model.py --output app/model
+uv run python scripts/fetch_model.py --output app/model
 az extension add --name containerapp --upgrade --yes --only-show-errors
 az provider register --namespace Microsoft.App --only-show-errors
 az provider register --namespace Microsoft.OperationalInsights --only-show-errors

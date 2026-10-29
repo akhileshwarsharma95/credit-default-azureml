@@ -4,15 +4,15 @@ Portfolio view, client scoring with reason codes, cut-off and limit policy,
 model validation and drift monitoring, a 'talk to your portfolio' agent and
 the model card. Uses the same creditrisk package as the Azure ML pipelines.
 
-    MODEL_DIR=outputs/local/model_package streamlit run app/streamlit_app.py
+    make app        # or: MODEL_DIR=outputs/local/model_package uv run streamlit run app/streamlit_app.py
 """
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import time
-import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -110,9 +110,7 @@ def model_dir() -> Path:
     for candidate in (os.getenv("MODEL_DIR"), ROOT / "app" / "model", ROOT / "outputs" / "local" / "model_package"):
         if candidate and Path(candidate).exists():
             return Path(candidate)
-    st.error(
-        "No model package found. Run `python scripts/run_local.py` or `python scripts/fetch_model.py --output app/model`."
-    )
+    st.error("No model package found. Run `make local` or `uv run python scripts/fetch_model.py --output app/model`.")
     st.stop()
 
 
@@ -414,7 +412,7 @@ with tab_client:
             with urllib.request.urlopen(req, timeout=20) as r:
                 remote = json.loads(r.read())
             remote["roundtrip_ms"] = round((time.perf_counter() - t0) * 1000)
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        except (OSError, ValueError, http.client.HTTPException) as exc:  # network, bad URI or bad JSON
             st.error(f"Endpoint call failed: {exc}")
 
     k = st.columns(5)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-import logging
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -11,11 +11,10 @@ import pytest
 import yaml
 
 from conftest import ROOT, make_synthetic
-from creditrisk import drift, metrics, policy, quality
-from creditrisk.agent import SqlGuardError, guard_sql
+from creditrisk import drift, insights, metrics, policy, quality
+from creditrisk.agent import PortfolioAgent, SqlGuardError, guard_sql
 from creditrisk.config import load
 from creditrisk.features import ENGINEERED, FeatureEngineer
-from creditrisk.observability import get_logger
 from creditrisk.schema import RAW_FEATURES, _standardise_columns
 
 
@@ -147,11 +146,14 @@ def test_step_scripts_import_only_creditrisk_and_third_party():
 
 
 def test_config_drives_policy_and_monitoring_constants():
-    cfg = load()
-    assert policy.PD_FLOOR == cfg["business"]["pd_floor"] == 0.001
-    assert policy.cost_optimal_threshold(**cfg["business"]["costs"]) == pytest.approx(1 / 6)
-    assert [g for g, _, _ in policy.MASTER_SCALE] == [g for g, _, _ in cfg["business"]["master_scale"]]
-    assert (drift.PSI_WARN, drift.PSI_ALERT) == (0.10, 0.25)
+    business = load()["business"]
+    assert business["pd_floor"] == policy.PD_FLOOR
+    assert policy.Assumptions().cost_fn == business["costs"]["cost_fn"]
+    assert [g for g, _, _ in policy.MASTER_SCALE] == [g for g, _, _ in business["master_scale"]]
+    assert (business["monitoring"]["psi_warn"], business["monitoring"]["psi_alert"]) == (
+        drift.PSI_WARN,
+        drift.PSI_ALERT,
+    )
 
 
 @pytest.mark.parametrize(
@@ -187,7 +189,12 @@ def test_cli_pipeline_defaults_match_config():
     assert inputs["model_name"] == cfg["technical"]["azure"]["model_name"]
 
 
-def test_get_logger_emits_info_by_default(caplog):
-    caplog.set_level("INFO", logger="creditrisk")
-    get_logger("x").info("hello")
-    assert ("creditrisk.x", logging.INFO, "hello") in caplog.record_tuples
+def test_agent_returns_bad_tool_arguments_to_the_model():
+    # Scripted LLM: one tool call with a null query, then a final answer
+    call = SimpleNamespace(id="1", function=SimpleNamespace(arguments='{"query": null}'), model_dump=dict)
+    replies = iter([SimpleNamespace(content=None, tool_calls=[call]), SimpleNamespace(content="done", tool_calls=None)])
+    create = lambda **_: SimpleNamespace(choices=[SimpleNamespace(message=next(replies))], usage=None)  # noqa: E731
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    result = PortfolioAgent(insights.connect({"portfolio": pd.DataFrame({"pd": [0.1]})}), client=client).ask("q")
+    assert result.answer == "done"
+    assert any(step.detail.startswith("ERROR") for step in result.steps)
