@@ -220,7 +220,7 @@ function Overview() {
   return html`<div>
     <div class="prepared"><img src=${I("dkv-mobility")} alt="DKV Mobility" /><span>Prepared for <b>DKV Mobility</b> · Senior Data Scientist case study</span></div>
     <${Head} title="Credit default PD engine on Azure ML"
-      lead="Predict whether a credit-card client misses next month's payment (UCI, 30,000 clients) and run it as a governed Azure ML SDK v2 pipeline: preprocess → train → evaluate → register, on a compute cluster, with the model in the workspace registry." />
+      lead="I built a model that predicts whether a credit-card client misses next month's payment (UCI, 30,000 clients) and runs as a governed Azure ML SDK v2 pipeline: preprocess → train → evaluate → register, on a compute cluster, with the model in the workspace registry." />
     <div class="grid g4">
       <${Kpi} accent label="Test ROC AUC" value="0.779" note="95% CI 0.765 – 0.792 · 5,993 clients" />
       <${Kpi} accent label="Gini / KS" value="0.557 / 0.423" note="monotonic LightGBM, calibrated" />
@@ -433,7 +433,7 @@ function Observability() {
     <${Head} title="Observability & monitoring"
       lead="Four layers: data quality at every step, model drift per batch, service health on the endpoint, and alerts that point to a runbook playbook." />
     <div class="grid g4">
-      <${Kpi} accent label="Score PSI · downturn batch" value="0.344" note="alert ≥ 0.25 · run on Azure today" />
+      <${Kpi} accent label="Score PSI · downturn batch" value="0.344" note="alert ≥ 0.25 · Azure run, 29 Oct 2026" />
       <${Kpi} accent label="Rating-grade PSI" value="0.331" note="vs the baseline stored with the model" />
       <${Kpi} accent label="Features in alert / warn" value="13 / 9" note="max feature PSI 1.70 (pay_ratio_avg)" />
       <${Kpi} accent label="Mean PD" value="22.1% → 29.7%" note="reference vs current batch" />
@@ -474,7 +474,7 @@ function Observability() {
 function Reporting() {
   return html`<div>
     <${Head} title="Reporting & business impact"
-      lead="The PD is an input, not the product. The insights step turns scores into expected loss, staging, early warning and limit actions in SQL, ready for Power BI. Figures: simulated downturn batch, scored on Azure today." />
+      lead="The PD is an input, not the product. The insights step turns scores into expected loss, staging, early warning and limit actions in SQL, ready for Power BI. Figures: simulated downturn batch, scored on Azure on 29 Oct 2026." />
     <div class="grid g4">
       <${Kpi} label="Exposure (EAD)" value="NT$ 703 M" note="5,993 clients" />
       <${Kpi} label="Expected loss" value="NT$ 110 M" note="15.7% of EAD (12-month)" />
@@ -565,7 +565,7 @@ const RUNS = [
 function Live() {
   return html`<div>
     <${Head} title="Live on Azure"
-      lead="What is running in the subscription right now, the evidence for the deliverable, and what it costs." />
+      lead="What I have running in my Azure subscription, the evidence for the deliverable, and what it costs." />
     <div class="grid g4">
       <div class="card"><${Svc} icon="az/machine-learning" name="mlw-credit-risk">Azure ML workspace · Germany West Central</${Svc}></div>
       <div class="card"><${Svc} icon="az/vm" name="cpu-cluster">Standard_D2as_v4 · 0–2 nodes · idle = 0 nodes</${Svc}></div>
@@ -581,7 +581,7 @@ function Live() {
           <td><${Pill} kind="good">${s}</${Pill}></td><td class="small">${d}</td></tr>`)}
       </tbody></table></div>
     <div class="grid g2 section">
-      <div class="card"><h3>Found and fixed while moving to Azure</h3><ul class="clean small">
+      <div class="card"><h3>What I hit moving to Azure, and how I fixed it</h3><ul class="clean small">
         <li><b>Quota:</b> DSv2 family had 0 vCPUs in the region → cluster on Standard_D2as_v4 (DASv4, 4 vCPUs)</li>
         <li><b>Config bug:</b> .env was loaded after defaults were read, so the VM override was ignored → load first</li>
         <li><b>Output download:</b> pipeline-level outputs have no path of their own → fetch from the register step</li>

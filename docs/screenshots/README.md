@@ -1,6 +1,6 @@
-# Screenshots (add after the Azure run)
+# Screenshots
 
-Save these from Azure ML studio (ml.azure.com) for the deliverable:
+Azure ML studio views (ml.azure.com) for the deliverable:
 
 1. `pipeline_run.png` - Jobs -> credit-default -> latest run: the 4-step graph, all green.
 2. `evaluate_metrics.png` - the *3 - evaluate* step -> Metrics (test AUC, Gini, KS, ECE ...).

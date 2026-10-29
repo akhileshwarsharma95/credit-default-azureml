@@ -1,8 +1,8 @@
-# Azure setup guide (for Databricks / AWS users)
+# Azure setup
 
 Everything below fits in the Azure free account ($200 credit for 30 days) or Azure for Students ($100, no card). A full training run costs well under a dollar; the only thing that bills around the clock is the optional online endpoint, so delete it after the demo.
 
-## 1. How Azure ML maps to what you know
+## 1. Azure ML concepts compared with Databricks and AWS
 
 | Concept | Databricks | AWS | Azure ML (this repo) |
 |---|---|---|---|
