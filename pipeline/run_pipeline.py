@@ -20,6 +20,7 @@ import tempfile
 from pathlib import Path
 
 from creditrisk.config import load
+from creditrisk.observability import get_logger
 from pipeline.azure_utils import (
     COMPONENTS,
     DEFAULTS,
@@ -30,6 +31,8 @@ from pipeline.azure_utils import (
     git_sha,
     stream_and_check,
 )
+
+LOGGER = get_logger("pipeline")
 
 TRAINING = load()["technical"]["training"]
 COSTS = load()["business"]["costs"]
@@ -101,7 +104,7 @@ def find_raw_file(path: str | None) -> Path:
     raw_dir = ROOT / "data" / "raw"
     files = sorted(p for p in raw_dir.glob("*") if p.suffix.lower() in {".xls", ".xlsx", ".csv"})
     if not files:
-        print("No raw file found - downloading from UCI ...")
+        LOGGER.info("No raw file found - downloading from UCI ...")
         import subprocess
 
         subprocess.run([sys.executable, str(ROOT / "scripts" / "download_data.py")], check=True)
@@ -139,13 +142,13 @@ def main() -> None:
             out = Path(tmp) / "pipeline.yml"
             job.dump(out)
             print(out.read_text())
-        print(f"Dry run OK: {len(job.jobs)} steps -> {', '.join(job.jobs)}")
+        LOGGER.info(f"Dry run OK: {len(job.jobs)} steps -> {', '.join(job.jobs)}")
         return
 
     from azure.ai.ml import Input
 
     ml_client = get_ml_client()
-    print(f"Workspace: {ml_client.workspace_name} (resource group {ml_client.resource_group_name})")
+    LOGGER.info(f"Workspace: {ml_client.workspace_name} (resource group {ml_client.resource_group_name})")
     ensure_compute(ml_client, args.compute, args.vm_size, args.max_nodes)
     raw = find_raw_file(args.raw_file)
     asset = ensure_data_asset(
@@ -171,11 +174,11 @@ def main() -> None:
             description="Retrains, evaluates and (if the quality gate passes) registers a challenger model.",
         )
         ml_client.schedules.begin_create_or_update(schedule).result()
-        print(f"Schedule 'credit-default-retraining' created: {args.schedule} (W. Europe time)")
+        LOGGER.info(f"Schedule 'credit-default-retraining' created: {args.schedule} (W. Europe time)")
         return
 
     submitted = ml_client.jobs.create_or_update(job, experiment_name=args.experiment)
-    print(f"Submitted pipeline {submitted.name}\nStudio: {submitted.studio_url}")
+    LOGGER.info(f"Submitted pipeline {submitted.name}\nStudio: {submitted.studio_url}")
     if args.wait:
         stream_and_check(ml_client, submitted)
         with tempfile.TemporaryDirectory() as tmp:
@@ -189,14 +192,14 @@ def main() -> None:
                 ml_client.jobs.download(register_job.name, output_name="model_info_output", download_path=tmp)
                 info_file = next(Path(tmp).rglob("model_info.json"))
                 info = json.loads(info_file.read_text())
-                print(f"Model info: {json.dumps(info, indent=2)}")
+                LOGGER.info(f"Model info: {json.dumps(info, indent=2)}")
                 Path(ROOT / "outputs").mkdir(exist_ok=True)
                 (ROOT / "outputs" / "last_model_info.json").write_text(json.dumps(info, indent=2))
                 card = next(Path(tmp).rglob("MODEL_CARD.md"), None)
                 if card:
                     (ROOT / "outputs" / "MODEL_CARD.md").write_text(card.read_text())
             except Exception as exc:  # noqa: BLE001
-                print(f"Could not download model_info output: {exc}")
+                LOGGER.warning(f"Could not download model_info output: {exc}")
 
 
 if __name__ == "__main__":

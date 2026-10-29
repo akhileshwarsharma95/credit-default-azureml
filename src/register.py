@@ -18,7 +18,10 @@ import pandas as pd
 from mlflow.tracking import MlflowClient
 
 from creditrisk import model_card
+from creditrisk.observability import get_logger
 from creditrisk.tracking import write_json
+
+LOGGER = get_logger("register")
 
 
 def str2bool(v) -> bool:
@@ -55,7 +58,7 @@ def main(argv=None) -> None:
                 info_dir / "model_info.json",
             )
             mlflow.log_metric("registered", 0)
-            print(f"Quality gate failed - model NOT registered: {decision['checks']}")
+            LOGGER.warning(f"Quality gate failed - model NOT registered: {decision['checks']}")
             return
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -100,7 +103,7 @@ def main(argv=None) -> None:
             try:
                 client.set_model_version_tag(args.model_name, mv.version, k, v)
             except Exception as exc:  # noqa: BLE001 - tags are metadata, never block registration
-                print(f"Could not set tag {k}: {exc}")
+                LOGGER.warning(f"Could not set tag {k}: {exc}")
         try:
             client.update_model_version(
                 args.model_name,
@@ -108,7 +111,7 @@ def main(argv=None) -> None:
                 description=f"PD model ({summary['model_family']}), test AUC {m['auc']:.3f}",
             )
         except Exception as exc:  # noqa: BLE001
-            print(f"Could not set description: {exc}")
+            LOGGER.warning(f"Could not set description: {exc}")
 
         info = {
             "registered": True,
@@ -119,7 +122,7 @@ def main(argv=None) -> None:
         }
         write_json(info, info_dir / "model_info.json")
         mlflow.log_metric("registered", 1)
-        print(f"Registered {args.model_name} version {mv.version}")
+        LOGGER.info(f"Registered {args.model_name} version {mv.version}")
 
 
 if __name__ == "__main__":

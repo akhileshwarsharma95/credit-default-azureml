@@ -14,6 +14,10 @@ from pathlib import Path
 
 import tomllib
 
+from creditrisk.observability import get_logger
+
+LOGGER = get_logger("lock_env")
+
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDE_NEWER = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["uv"]["exclude-newer"]
 
@@ -47,7 +51,7 @@ def write_conda(pins, path: Path, name: str, header: str) -> None:
     path.write_text(
         f"{header}\nname: {name}\nchannels:\n  - conda-forge\ndependencies:\n  - python=3.10\n  - pip=24.2\n  - pip:\n{body}\n"
     )
-    print(f"{path.relative_to(ROOT)}: {len(pins)} packages")
+    LOGGER.info(f"{path.relative_to(ROOT)}: {len(pins)} packages")
 
 
 def main() -> None:
@@ -82,7 +86,7 @@ def main() -> None:
         "# Online endpoint environment (managed online deployment, custom scoring script).\n"
         "# Fully pinned lock for Python 3.10 / linux-64 from environments/serving-requirements.in.",
     )
-    print("Re-run `pytest` and `python scripts/run_local.py` with the new pins before committing.")
+    LOGGER.info("Re-run `pytest` and `python scripts/run_local.py` with the new pins before committing.")
 
 
 if __name__ == "__main__":

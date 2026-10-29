@@ -13,6 +13,10 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from creditrisk.observability import get_logger
+
+LOGGER = get_logger("data")
+
 UCI_URL = "https://archive.ics.uci.edu/static/public/350/default+of+credit+card+clients.zip"
 MIRROR_URL = "https://raw.githubusercontent.com/PacktPublishing/Ensemble-Machine-Learning-Cookbook/master/Chapter06/UCI_Credit_Card.csv"
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,11 +50,11 @@ def main() -> None:
         try:
             path = from_uci(dest)
         except Exception as exc:  # noqa: BLE001
-            print(f"UCI download failed ({exc}); using GitHub mirror")
+            LOGGER.warning(f"UCI download failed ({exc}); using GitHub mirror")
             path = from_mirror(dest)
     else:
         path = from_mirror(dest)
-    print(f"Saved {path} ({path.stat().st_size / 1e6:.1f} MB)")
+    LOGGER.info(f"Saved {path} ({path.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":

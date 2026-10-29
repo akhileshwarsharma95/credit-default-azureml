@@ -15,8 +15,11 @@ from sklearn.model_selection import train_test_split
 
 from creditrisk import quality
 from creditrisk.config import load
+from creditrisk.observability import get_logger
 from creditrisk.schema import TARGET, load_raw
 from creditrisk.tracking import log_metrics, log_params, write_json
+
+LOGGER = get_logger("preprocess")
 
 
 def parse_args(argv=None):
@@ -78,7 +81,7 @@ def main(argv=None) -> None:
                 "test_default_rate": summary["test_default_rate"],
             }
         )
-        print(
+        LOGGER.info(
             f"Preprocessing done: {len(train):,} train / {len(test):,} test rows, default rate {summary['train_default_rate']:.3f}"
         )
 

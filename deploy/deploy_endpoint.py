@@ -21,7 +21,10 @@ import os
 import tempfile
 from pathlib import Path
 
+from creditrisk.observability import get_logger
 from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
+
+LOGGER = get_logger("deploy")
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -88,7 +91,7 @@ def smoke_test(ml_client, endpoint: str, deployment: str) -> None:
     expected = len(json.loads((ROOT / "deploy" / "sample_request.json").read_text())["clients"])
     if len(preds) != expected or not all(0 < p["pd"] < 1 for p in preds):
         raise SystemExit(f"Smoke test failed: {body}")
-    print("Smoke test passed:", [(p.get("ID"), p["pd"], p["grade"], p["action"]) for p in preds])
+    LOGGER.info("Smoke test passed: %s", [(p.get("ID"), p["pd"], p["grade"], p["action"]) for p in preds])
 
 
 def main() -> None:
@@ -123,7 +126,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory() as tmp:
             dep.dump(Path(tmp) / "deployment.yml")
             print((Path(tmp) / "deployment.yml").read_text())
-        print(f"Dry run OK: deployment spec for endpoint '{args.endpoint_name}'")
+        LOGGER.info(f"Dry run OK: deployment spec for endpoint '{args.endpoint_name}'")
         return
 
     from azure.ai.ml.entities import ManagedOnlineEndpoint
@@ -134,7 +137,7 @@ def main() -> None:
 
     if args.delete:
         ml_client.online_endpoints.begin_delete(name=name).result()
-        print(f"Endpoint {name} deleted")
+        LOGGER.info(f"Endpoint {name} deleted")
         return
 
     try:
@@ -142,7 +145,7 @@ def main() -> None:
     except ResourceNotFoundError:
         if args.rollback:
             raise SystemExit("Nothing to roll back") from None
-        print(f"Creating endpoint {name} ...")
+        LOGGER.info(f"Creating endpoint {name} ...")
         endpoint = ml_client.online_endpoints.begin_create_or_update(
             ManagedOnlineEndpoint(
                 name=name,
@@ -162,14 +165,14 @@ def main() -> None:
             raise SystemExit("No previous deployment to roll back to")
         endpoint.traffic = {others[0]: 100, **{d: 0 for d in existing if d != others[0]}}
         ml_client.online_endpoints.begin_create_or_update(endpoint).result()
-        print(f"Rolled back: 100% traffic -> {others[0]}")
+        LOGGER.info(f"Rolled back: 100% traffic -> {others[0]}")
         return
 
     model = resolve_model(ml_client, args.model_name, args.model_version)
     new = "green" if live == "blue" else "blue"
     if new in existing and new != live:
         ml_client.online_deployments.begin_delete(name=new, endpoint_name=name).result()
-    print(
+    LOGGER.info(
         f"Deploying {model.name}:{model.version} as '{new}' on {args.instance_type} x{args.instance_count} (takes ~10-15 min) ..."
     )
     dep = build_deployment(new, name, model.id, args.instance_type, args.instance_count, not args.no_data_collection)
@@ -179,18 +182,20 @@ def main() -> None:
 
     if live and args.canary > 0:
         endpoint.traffic = {live: 100 - args.canary, new: args.canary}
-        print(f"Canary: {args.canary}% -> {new}, {100 - args.canary}% -> {live}. Re-run with --canary 0 to complete.")
+        LOGGER.info(
+            f"Canary: {args.canary}% -> {new}, {100 - args.canary}% -> {live}. Re-run with --canary 0 to complete."
+        )
     else:
         endpoint.traffic = {new: 100, **({live: 0} if live else {})}
     ml_client.online_endpoints.begin_create_or_update(endpoint).result()
 
     if live and args.canary == 0 and not args.keep_old:
         ml_client.online_deployments.begin_delete(name=live, endpoint_name=name).result()
-        print(f"Deleted previous deployment '{live}'")
+        LOGGER.info(f"Deleted previous deployment '{live}'")
 
     endpoint = ml_client.online_endpoints.get(name)
-    print(f"Endpoint ready: {endpoint.scoring_uri}\nTraffic: {endpoint.traffic}")
-    print(f"Key: az ml online-endpoint get-credentials -n {name} -g $AZURE_RESOURCE_GROUP -w $AZUREML_WORKSPACE")
+    LOGGER.info(f"Endpoint ready: {endpoint.scoring_uri}\nTraffic: {endpoint.traffic}")
+    LOGGER.info(f"Key: az ml online-endpoint get-credentials -n {name} -g $AZURE_RESOURCE_GROUP -w $AZUREML_WORKSPACE")
 
 
 if __name__ == "__main__":

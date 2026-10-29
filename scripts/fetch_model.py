@@ -12,8 +12,11 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from creditrisk.observability import get_logger
 from creditrisk.scoring import find_model_dir
 from pipeline.azure_utils import DEFAULTS, get_ml_client, resolve_model
+
+LOGGER = get_logger("fetch_model")
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,7 +38,7 @@ def main() -> None:
             shutil.rmtree(out)
         shutil.copytree(src, out)
     (out / "REGISTRY_VERSION").write_text(f"{model.name}:{model.version}\n")
-    print(f"Downloaded {model.name}:{model.version} to {out}")
+    LOGGER.info(f"Downloaded {model.name}:{model.version} to {out}")
 
 
 if __name__ == "__main__":

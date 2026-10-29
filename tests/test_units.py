@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import logging
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from creditrisk import drift, metrics, policy, quality
 from creditrisk.agent import SqlGuardError, guard_sql
 from creditrisk.config import load
 from creditrisk.features import ENGINEERED, FeatureEngineer
+from creditrisk.observability import get_logger
 from creditrisk.schema import RAW_FEATURES, _standardise_columns
 
 
@@ -183,3 +185,9 @@ def test_cli_pipeline_defaults_match_config():
     assert (inputs["n_trials"], inputs["exclude_sensitive"]) == (training["n_trials"], training["exclude_sensitive"])
     assert (inputs["cost_fn"], inputs["cost_fp"]) == (costs["cost_fn"], costs["cost_fp"])
     assert inputs["model_name"] == cfg["technical"]["azure"]["model_name"]
+
+
+def test_get_logger_emits_info_by_default(caplog):
+    caplog.set_level("INFO", logger="creditrisk")
+    get_logger("x").info("hello")
+    assert ("creditrisk.x", logging.INFO, "hello") in caplog.record_tuples

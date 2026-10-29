@@ -16,6 +16,7 @@ import argparse
 import tempfile
 from pathlib import Path
 
+from creditrisk.observability import get_logger
 from pipeline.azure_utils import (
     COMPONENTS,
     DEFAULTS,
@@ -25,6 +26,8 @@ from pipeline.azure_utils import (
     resolve_model,
     stream_and_check,
 )
+
+LOGGER = get_logger("batch_pipeline")
 
 
 def build_pipeline(model_input, scoring_input, compute: str):
@@ -82,7 +85,7 @@ def main() -> None:
             out = Path(tmp) / "batch.yml"
             job.dump(out)
             print(out.read_text())
-        print(f"Dry run OK: {len(job.jobs)} steps -> {', '.join(job.jobs)}")
+        LOGGER.info(f"Dry run OK: {len(job.jobs)} steps -> {', '.join(job.jobs)}")
         return
 
     ml_client = get_ml_client()
@@ -92,7 +95,7 @@ def main() -> None:
     asset = ensure_data_asset(
         ml_client, f"credit-default-batch-{batch.stem.replace('_', '-')}", batch, f"Scoring batch {batch.name}"
     )
-    print(f"Scoring {asset.name}:{asset.version} with {model.name}:{model.version} ({model.type})")
+    LOGGER.info(f"Scoring {asset.name}:{asset.version} with {model.name}:{model.version} ({model.type})")
     job = build_pipeline(Input(type=model.type, path=model.id), Input(type="uri_file", path=asset.id), args.compute)
     job.tags = {"model_version": str(model.version), "batch": f"{asset.name}:{asset.version}"}
 
@@ -107,11 +110,11 @@ def main() -> None:
             display_name="Credit default - scheduled scoring and drift monitoring",
         )
         ml_client.schedules.begin_create_or_update(schedule).result()
-        print(f"Schedule created: {args.schedule}")
+        LOGGER.info(f"Schedule created: {args.schedule}")
         return
 
     submitted = ml_client.jobs.create_or_update(job, experiment_name=args.experiment)
-    print(f"Submitted {submitted.name}\nStudio: {submitted.studio_url}")
+    LOGGER.info(f"Submitted {submitted.name}\nStudio: {submitted.studio_url}")
     if args.wait:
         stream_and_check(ml_client, submitted)
 

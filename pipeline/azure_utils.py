@@ -8,6 +8,9 @@ import subprocess
 from pathlib import Path
 
 from creditrisk.config import load
+from creditrisk.observability import get_logger
+
+LOGGER = get_logger("azure")
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPONENTS = ROOT / "components"
@@ -59,11 +62,11 @@ def ensure_compute(ml_client, name: str, vm_size: str, max_nodes: int):
 
     try:
         cluster = ml_client.compute.get(name)
-        print(f"Compute cluster '{name}' exists ({cluster.size}, max {cluster.max_instances} nodes)")
+        LOGGER.info(f"Compute cluster '{name}' exists ({cluster.size}, max {cluster.max_instances} nodes)")
         return cluster
     except ResourceNotFoundError:
         pass
-    print(f"Creating compute cluster '{name}' ({vm_size}, 0-{max_nodes} nodes, scale-down after 3 min idle) ...")
+    LOGGER.info(f"Creating compute cluster '{name}' ({vm_size}, 0-{max_nodes} nodes, scale-down after 3 min idle) ...")
     cluster = AmlCompute(
         name=name,
         size=vm_size,
@@ -96,7 +99,7 @@ def ensure_data_asset(ml_client, name: str, path: Path, description: str, extra_
         existing = []
     for asset in existing:
         if (asset.tags or {}).get("sha256") == digest:
-            print(f"Data asset {name}:{asset.version} already holds this file (sha256 {digest[:12]})")
+            LOGGER.info(f"Data asset {name}:{asset.version} already holds this file (sha256 {digest[:12]})")
             return asset
     numeric = [int(a.version) for a in existing if str(a.version).isdigit()]
     version = str(max(numeric) + 1) if numeric else "1"
@@ -109,7 +112,7 @@ def ensure_data_asset(ml_client, name: str, path: Path, description: str, extra_
         tags={"sha256": digest, "file": path.name, **(extra_tags or {})},
     )
     asset = ml_client.data.create_or_update(asset)
-    print(f"Registered data asset {name}:{asset.version}")
+    LOGGER.info(f"Registered data asset {name}:{asset.version}")
     return asset
 
 
@@ -136,7 +139,7 @@ def git_sha() -> str:
 def stream_and_check(ml_client, job) -> str:
     ml_client.jobs.stream(job.name)
     status = ml_client.jobs.get(job.name).status
-    print(f"Job {job.name} finished with status {status}")
+    LOGGER.info(f"Job {job.name} finished with status {status}")
     if status != "Completed":
         raise SystemExit(1)
     return status

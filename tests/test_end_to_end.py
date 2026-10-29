@@ -299,4 +299,4 @@ def test_azure_specs_build(script):
         env=os.environ | {"PYTHONWARNINGS": "ignore"},
     )
     assert r.returncode == 0, r.stderr[-2000:]
-    assert "Dry run OK" in r.stdout
+    assert "Dry run OK" in r.stdout + r.stderr  # logged on stderr; stdout carries only the spec

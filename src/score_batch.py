@@ -10,9 +10,12 @@ from pathlib import Path
 import mlflow
 
 from creditrisk import quality
+from creditrisk.observability import get_logger
 from creditrisk.schema import TARGET, load_batch
 from creditrisk.scoring import load_package, score_frame
 from creditrisk.tracking import log_metrics, write_json
+
+LOGGER = get_logger("score_batch")
 
 
 def parse_args(argv=None):
@@ -52,7 +55,7 @@ def main(argv=None) -> None:
             }
         )
         mlflow.log_artifact(str(out / "quality_report.json"), artifact_path="scoring")
-        print(
+        LOGGER.info(
             f"Scored {len(scored):,} clients | mean PD {scored['pd'].mean():.3f} | intervene {(scored['action'] == 'Intervene').mean():.1%}"
         )
 

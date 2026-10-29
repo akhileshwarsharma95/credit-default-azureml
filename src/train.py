@@ -27,8 +27,11 @@ from mlflow.models import infer_signature
 import creditrisk
 from creditrisk import drift, explain, metrics, modeling, policy
 from creditrisk.config import load
+from creditrisk.observability import get_logger
 from creditrisk.schema import TARGET, model_features, read_table
 from creditrisk.tracking import log_metrics, log_params, log_table, write_json
+
+LOGGER = get_logger("train")
 
 TRAINING = load()["technical"]["training"]
 
@@ -115,7 +118,7 @@ def main(argv=None) -> None:
         log_table(comparison, "model_selection/candidate_comparison.csv")
         best_name = comparison[comparison["selectable"]].iloc[0]["candidate"]
         print(comparison.to_string(index=False))
-        print(f"Selected: {best_name}")
+        LOGGER.info(f"Selected: {best_name}")
 
         # 3. Calibrated refit on the full training set
         calibrated = modeling.calibrate(selectable[best_name], args.calibration, args.cv_folds, args.random_state).fit(
@@ -207,7 +210,7 @@ def main(argv=None) -> None:
                 "monotonicity_auc_cost": summary["monotonicity_auc_cost"] or 0.0,
             }
         )
-        print(f"Model saved to {out} (CV AUC {summary['cv_auc']:.4f}, cut-off {threshold:.3f})")
+        LOGGER.info(f"Model saved to {out} (CV AUC {summary['cv_auc']:.4f}, cut-off {threshold:.3f})")
 
 
 if __name__ == "__main__":

@@ -19,15 +19,19 @@ import sys
 import time
 from pathlib import Path
 
+from creditrisk.observability import get_logger
+
+LOGGER = get_logger("local")
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 
 
 def run(step: str, args: list[str], env: dict, cwd: Path) -> None:
-    print(f"\n=== {step} ===", flush=True)
+    LOGGER.info(f"=== {step} ===")
     start = time.time()
     subprocess.run([sys.executable, str(SRC / f"{step}.py"), *args], check=True, env=env, cwd=cwd)
-    print(f"--- {step} finished in {time.time() - start:.0f}s", flush=True)
+    LOGGER.info(f"--- {step} finished in {time.time() - start:.0f}s")
 
 
 def main() -> None:
@@ -128,7 +132,7 @@ def main() -> None:
             artifact_uri=f"models:/{args.model_name}/{info['version']}", dst_path=str(package)
         )
         (package / "REGISTRY_VERSION").write_text(f"{args.model_name}:{info['version']} (local registry)\n")
-        print(f"\nRegistered version {info['version']} downloaded to {package}")
+        LOGGER.info(f"Registered version {info['version']} downloaded to {package}")
     elif not package.exists():
         raise SystemExit("Model was not registered and no previous package exists")
 

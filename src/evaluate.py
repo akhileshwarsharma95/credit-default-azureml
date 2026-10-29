@@ -21,9 +21,12 @@ from mlflow.tracking import MlflowClient
 from creditrisk import explain, metrics, plots, policy
 from creditrisk.config import load
 from creditrisk.modeling import unwrap_base
+from creditrisk.observability import get_logger
 from creditrisk.schema import MARRIAGE_LABELS, SEX_LABELS, TARGET, read_table
 from creditrisk.scoring import load_package, score_frame
 from creditrisk.tracking import log_metrics, log_table, write_json
+
+LOGGER = get_logger("evaluate")
 
 GATE = load()["business"]["registration_gate"]
 
@@ -190,7 +193,7 @@ def main(argv=None) -> None:
         log_metrics({"register_decision": decision["register"], "champion_auc": champ.get("auc", float("nan"))})
         mlflow.log_artifacts(str(out), artifact_path="evaluation")
         log_table(bt, "evaluation/backtest_table.csv")
-        print(
+        LOGGER.info(
             f"Test AUC {m['auc']:.4f} [{m['auc_ci_low']:.4f}, {m['auc_ci_high']:.4f}] | Gini {m['gini']:.4f} | KS {m['ks']:.4f} | "
             f"ECE {m['ece']:.4f} | champion: {champ['status']} | register: {decision['register']}"
         )

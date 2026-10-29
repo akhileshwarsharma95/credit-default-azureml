@@ -17,8 +17,11 @@ import argparse
 import tempfile
 from pathlib import Path
 
+from creditrisk.observability import get_logger
 from deploy.deploy_endpoint import default_endpoint_name
 from pipeline.azure_utils import get_ml_client
+
+LOGGER = get_logger("monitoring")
 
 
 def build_schedule(endpoint: str, deployment: str, emails: list[str], hour: int):
@@ -63,7 +66,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory() as tmp:
             schedule.dump(Path(tmp) / "monitor.yml")
             print((Path(tmp) / "monitor.yml").read_text())
-        print("Dry run OK: model monitor schedule spec")
+        LOGGER.info("Dry run OK: model monitor schedule spec")
         return
 
     ml_client = get_ml_client()
@@ -74,7 +77,7 @@ def main() -> None:
     ml_client.schedules.begin_create_or_update(
         build_schedule(args.endpoint_name, deployment, args.email, args.hour)
     ).result()
-    print(f"Model monitor created for {args.endpoint_name}/{deployment} (daily at {args.hour:02d}:00 UTC)")
+    LOGGER.info(f"Model monitor created for {args.endpoint_name}/{deployment} (daily at {args.hour:02d}:00 UTC)")
 
 
 if __name__ == "__main__":

@@ -16,7 +16,10 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 
 from creditrisk import drift, quality
+from creditrisk.observability import get_logger
 from creditrisk.schema import TARGET, load_raw
+
+LOGGER = get_logger("batches")
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,7 +39,7 @@ def main() -> None:
     dest.mkdir(parents=True, exist_ok=True)
     test.to_csv(dest / "portfolio_stable.csv", index=False)
     drift.simulate_downturn(test, severity=1.0).to_csv(dest / "portfolio_downturn.csv", index=False)
-    print(f"Wrote {len(test):,}-client batches to {dest}")
+    LOGGER.info(f"Wrote {len(test):,}-client batches to {dest}")
 
 
 if __name__ == "__main__":
