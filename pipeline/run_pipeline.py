@@ -135,7 +135,7 @@ def save_registration_result(ml_client, pipeline_name: str) -> None:
     LOGGER.info(f"Model info: {json.dumps(info, indent=2)}")
 
 
-def main() -> None:
+def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--raw-file", help="Local raw file to register (default: data/raw/*, downloaded if missing)")
     p.add_argument("--compute", default=DEFAULTS["compute"])
@@ -152,7 +152,11 @@ def main() -> None:
     p.add_argument("--wait", action="store_true", help="Stream logs and fail if the pipeline fails")
     p.add_argument("--dry-run", action="store_true", help="Build the pipeline locally and print it; no Azure calls")
     p.add_argument("--schedule", help="Cron expression for a recurring retraining schedule, e.g. '0 6 1 * *'")
-    args = p.parse_args()
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
     sha = git_sha()
 
     if args.dry_run:

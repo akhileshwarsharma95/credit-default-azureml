@@ -76,6 +76,23 @@ def fairness_groups(test: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def gate_decision(m: dict, champ: dict, args) -> dict:
+    """Champion/challenger gate: register only if the candidate clears every check."""
+    checks = {
+        "auc_above_minimum": bool(m["auc"] >= args.min_auc),
+        "calibration_ece_ok": bool(m["ece"] <= args.max_ece),
+        "not_worse_than_champion": bool(champ.get("auc") is None or m["auc"] >= champ["auc"] - args.champion_tolerance),
+    }
+    return {
+        "register": all(checks.values()),
+        "checks": checks,
+        "candidate_auc": m["auc"],
+        "champion": champ,
+        "thresholds": {"min_auc": args.min_auc, "max_ece": args.max_ece, "champion_tolerance": args.champion_tolerance},
+        "backtest_warning": bool(m["backtest_red_grades"] > 0),
+    }
+
+
 def main(argv=None) -> None:
     args = parse_args(argv)
     out = Path(args.evaluation_output)
@@ -129,25 +146,7 @@ def main(argv=None) -> None:
 
         # Champion / challenger
         champ = champion_auc(args.model_name, test, y)
-        checks = {
-            "auc_above_minimum": bool(m["auc"] >= args.min_auc),
-            "calibration_ece_ok": bool(m["ece"] <= args.max_ece),
-            "not_worse_than_champion": bool(
-                champ.get("auc") is None or m["auc"] >= champ["auc"] - args.champion_tolerance
-            ),
-        }
-        decision = {
-            "register": all(checks.values()),
-            "checks": checks,
-            "candidate_auc": m["auc"],
-            "champion": champ,
-            "thresholds": {
-                "min_auc": args.min_auc,
-                "max_ece": args.max_ece,
-                "champion_tolerance": args.champion_tolerance,
-            },
-            "backtest_warning": bool(m["backtest_red_grades"] > 0),
-        }
+        decision = gate_decision(m, champ, args)
 
         # Persist outputs (consumed by register step, model card and the app)
         write_json(m, out / "metrics.json")

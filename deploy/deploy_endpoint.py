@@ -94,7 +94,7 @@ def smoke_test(ml_client, endpoint: str, deployment: str) -> None:
     LOGGER.info("Smoke test passed: %s", [(p.get("ID"), p["pd"], p["grade"], p["action"]) for p in preds])
 
 
-def main() -> None:
+def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--endpoint-name", default=default_endpoint_name())
     p.add_argument("--model-name", default=DEFAULTS["model_name"])
@@ -112,62 +112,41 @@ def main() -> None:
     p.add_argument("--rollback", action="store_true")
     p.add_argument("--delete", action="store_true")
     p.add_argument("--dry-run", action="store_true")
-    args = p.parse_args()
+    return p.parse_args()
 
-    if args.dry_run:
-        dep = build_deployment(
-            "blue",
-            args.endpoint_name,
-            f"azureml:{args.model_name}:1",
-            args.instance_type,
-            args.instance_count,
-            not args.no_data_collection,
-        )
-        with tempfile.TemporaryDirectory() as tmp:
-            dep.dump(Path(tmp) / "deployment.yml")
-            print((Path(tmp) / "deployment.yml").read_text())
-        LOGGER.info(f"Dry run OK: deployment spec for endpoint '{args.endpoint_name}'")
-        return
 
+def get_or_create_endpoint(ml_client, name: str, create: bool):
     from azure.ai.ml.entities import ManagedOnlineEndpoint
     from azure.core.exceptions import ResourceNotFoundError
 
-    ml_client = get_ml_client()
-    name = args.endpoint_name
-
-    if args.delete:
-        ml_client.online_endpoints.begin_delete(name=name).result()
-        LOGGER.info(f"Endpoint {name} deleted")
-        return
-
     try:
-        endpoint = ml_client.online_endpoints.get(name)
+        return ml_client.online_endpoints.get(name)
     except ResourceNotFoundError:
-        if args.rollback:
+        if not create:
             raise SystemExit("Nothing to roll back") from None
-        LOGGER.info(f"Creating endpoint {name} ...")
-        endpoint = ml_client.online_endpoints.begin_create_or_update(
-            ManagedOnlineEndpoint(
-                name=name,
-                auth_mode="key",
-                description="Credit default PD scoring with reason codes",
-                tags={"app": "credit-risk"},
-            )
-        ).result()
+    LOGGER.info(f"Creating endpoint {name} ...")
+    return ml_client.online_endpoints.begin_create_or_update(
+        ManagedOnlineEndpoint(
+            name=name,
+            auth_mode="key",
+            description="Credit default PD scoring with reason codes",
+            tags={"app": "credit-risk"},
+        )
+    ).result()
 
-    traffic = dict(endpoint.traffic or {})
-    existing = [d.name for d in ml_client.online_deployments.list(endpoint_name=name)]
-    live = max(traffic, key=traffic.get) if traffic and max(traffic.values()) > 0 else None
 
-    if args.rollback:
-        others = [d for d in existing if d != live]
-        if not others:
-            raise SystemExit("No previous deployment to roll back to")
-        endpoint.traffic = {others[0]: 100, **{d: 0 for d in existing if d != others[0]}}
-        ml_client.online_endpoints.begin_create_or_update(endpoint).result()
-        LOGGER.info(f"Rolled back: 100% traffic -> {others[0]}")
-        return
+def rollback(ml_client, endpoint, existing: list[str], live: str | None) -> None:
+    others = [d for d in existing if d != live]
+    if not others:
+        raise SystemExit("No previous deployment to roll back to")
+    endpoint.traffic = {others[0]: 100, **{d: 0 for d in existing if d != others[0]}}
+    ml_client.online_endpoints.begin_create_or_update(endpoint).result()
+    LOGGER.info(f"Rolled back: 100% traffic -> {others[0]}")
 
+
+def release(ml_client, endpoint, existing: list[str], live: str | None, args) -> None:
+    """Blue/green: deploy to the idle colour, smoke-test it, then switch (or split for a canary)."""
+    name = endpoint.name
     model = resolve_model(ml_client, args.model_name, args.model_version)
     new = "green" if live == "blue" else "blue"
     if new in existing and new != live:
@@ -192,6 +171,40 @@ def main() -> None:
     if live and args.canary == 0 and not args.keep_old:
         ml_client.online_deployments.begin_delete(name=live, endpoint_name=name).result()
         LOGGER.info(f"Deleted previous deployment '{live}'")
+
+
+def main() -> None:
+    args = parse_args()
+    if args.dry_run:
+        dep = build_deployment(
+            "blue",
+            args.endpoint_name,
+            f"azureml:{args.model_name}:1",
+            args.instance_type,
+            args.instance_count,
+            not args.no_data_collection,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            dep.dump(Path(tmp) / "deployment.yml")
+            print((Path(tmp) / "deployment.yml").read_text())
+        LOGGER.info(f"Dry run OK: deployment spec for endpoint '{args.endpoint_name}'")
+        return
+
+    ml_client = get_ml_client()
+    name = args.endpoint_name
+    if args.delete:
+        ml_client.online_endpoints.begin_delete(name=name).result()
+        LOGGER.info(f"Endpoint {name} deleted")
+        return
+
+    endpoint = get_or_create_endpoint(ml_client, name, create=not args.rollback)
+    traffic = dict(endpoint.traffic or {})
+    existing = [d.name for d in ml_client.online_deployments.list(endpoint_name=name)]
+    live = max(traffic, key=traffic.get) if traffic and max(traffic.values()) > 0 else None
+    if args.rollback:
+        rollback(ml_client, endpoint, existing, live)
+        return
+    release(ml_client, endpoint, existing, live, args)
 
     endpoint = ml_client.online_endpoints.get(name)
     LOGGER.info(f"Endpoint ready: {endpoint.scoring_uri}\nTraffic: {endpoint.traffic}")

@@ -72,6 +72,63 @@ def parse_args(argv=None):
     return p.parse_args(argv)
 
 
+def compare_candidates(X, y, features, best_params, args) -> tuple[pd.DataFrame, dict, dict]:
+    """Out-of-fold metrics per candidate; the unconstrained LightGBM is a sensitivity check, never selected."""
+    lgbm_name = "lightgbm_monotone" if args.monotone else "lightgbm"
+    selectable = {
+        lgbm_name: modeling.build_lgbm(features, best_params, args.monotone, args.random_state),
+        "logistic_scorecard": modeling.build_logreg(features),
+    }
+    sensitivity = (
+        {"lightgbm_unconstrained": modeling.build_lgbm(features, best_params, False, args.random_state)}
+        if args.monotone
+        else {}
+    )
+    rows, oof = [], {}
+    for name, model in {**selectable, **sensitivity}.items():
+        oof[name] = modeling.oof_proba(model, X, y, args.cv_folds, args.random_state)
+        d = metrics.discrimination(y, oof[name])
+        rows.append(
+            {"candidate": name, "selectable": name in selectable, **d, "brier": float(np.mean((oof[name] - y) ** 2))}
+        )
+        log_metrics(d, prefix=f"cv_{name}_")
+    comparison = pd.DataFrame(rows).sort_values("auc", ascending=False)
+    log_table(comparison, "model_selection/candidate_comparison.csv")
+    return comparison, selectable, oof
+
+
+def save_package(final, X, pd_train, out: Path, best_name: str, threshold: float, args) -> list[str]:
+    """MLflow model + drift reference profile + SHAP background sample; returns the pinned requirements."""
+    if out.exists() and any(out.iterdir()):
+        raise SystemExit(f"Model output folder {out} is not empty")
+    sample = X.head(200).astype(float)  # double schema: tolerant of ints and missing values at serving time
+    pip_reqs = [
+        f"scikit-learn=={sklearn.__version__}",
+        f"lightgbm=={lightgbm.__version__}",
+        f"pandas=={pd.__version__}",
+        f"numpy=={np.__version__}",
+        f"scipy=={scipy.__version__}",
+        f"mlflow=={mlflow.__version__}",
+    ]
+    mlflow.sklearn.save_model(
+        final,
+        path=str(out),
+        signature=infer_signature(sample, final.predict_proba(sample)),
+        input_example=X.head(3).astype(float),
+        code_paths=[str(Path(creditrisk.__file__).parent)],
+        pip_requirements=pip_reqs,
+        pyfunc_predict_fn="predict_proba",
+        metadata={"model_family": best_name, "threshold": threshold, "calibration": args.calibration},
+    )
+    write_json(
+        drift.build_profile(explain.feature_frame(final, X), pd_train), out / "reference" / "reference_profile.json"
+    )
+    X.sample(n=min(500, len(X)), random_state=args.random_state).to_csv(
+        out / "reference" / "background.csv", index=False
+    )
+    return pip_reqs
+
+
 def main(argv=None) -> None:
     args = parse_args(argv)
     with mlflow.start_run():
@@ -91,31 +148,7 @@ def main(argv=None) -> None:
         log_params({f"lgbm_{k}": v for k, v in best_params.items()})
 
         # 2. Out-of-fold candidate comparison
-        lgbm_name = "lightgbm_monotone" if args.monotone else "lightgbm"
-        selectable = {
-            lgbm_name: modeling.build_lgbm(features, best_params, args.monotone, args.random_state),
-            "logistic_scorecard": modeling.build_logreg(features),
-        }
-        sensitivity = (
-            {"lightgbm_unconstrained": modeling.build_lgbm(features, best_params, False, args.random_state)}
-            if args.monotone
-            else {}
-        )
-        rows, oof = [], {}
-        for name, model in {**selectable, **sensitivity}.items():
-            oof[name] = modeling.oof_proba(model, X, y, args.cv_folds, args.random_state)
-            d = metrics.discrimination(y, oof[name])
-            rows.append(
-                {
-                    "candidate": name,
-                    "selectable": name in selectable,
-                    **d,
-                    "brier": float(np.mean((oof[name] - y) ** 2)),
-                }
-            )
-            log_metrics(d, prefix=f"cv_{name}_")
-        comparison = pd.DataFrame(rows).sort_values("auc", ascending=False)
-        log_table(comparison, "model_selection/candidate_comparison.csv")
+        comparison, selectable, oof = compare_candidates(X, y, features, best_params, args)
         best_name = comparison[comparison["selectable"]].iloc[0]["candidate"]
         print(comparison.to_string(index=False))
         LOGGER.info(f"Selected: {best_name}")
@@ -141,34 +174,10 @@ def main(argv=None) -> None:
 
         # 5. Package: model + drift reference + explanation background + summary
         out = Path(args.model_output)
-        if out.exists() and any(out.iterdir()):
-            raise SystemExit(f"Model output folder {out} is not empty")
-        sample = X.head(200).astype(float)  # double schema: tolerant of ints and missing values at serving time
-        pip_reqs = [
-            f"scikit-learn=={sklearn.__version__}",
-            f"lightgbm=={lightgbm.__version__}",
-            f"pandas=={pd.__version__}",
-            f"numpy=={np.__version__}",
-            f"scipy=={scipy.__version__}",
-            f"mlflow=={mlflow.__version__}",
-        ]
-        mlflow.sklearn.save_model(
-            final,
-            path=str(out),
-            signature=infer_signature(sample, final.predict_proba(sample)),
-            input_example=X.head(3).astype(float),
-            code_paths=[str(Path(creditrisk.__file__).parent)],
-            pip_requirements=pip_reqs,
-            pyfunc_predict_fn="predict_proba",
-            metadata={"model_family": best_name, "threshold": threshold, "calibration": args.calibration},
-        )
-        feats = explain.feature_frame(final, X)
-        write_json(drift.build_profile(feats, pd_train), out / "reference" / "reference_profile.json")
-        X.sample(n=min(500, len(X)), random_state=args.random_state).to_csv(
-            out / "reference" / "background.csv", index=False
-        )
+        pip_reqs = save_package(final, X, pd_train, out, best_name, threshold, args)
 
-        selected = comparison.set_index("candidate").loc[best_name]
+        by_name = comparison.set_index("candidate")
+        selected = by_name.loc[best_name]
         summary = {
             "trained_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "model_family": best_name,
@@ -180,11 +189,11 @@ def main(argv=None) -> None:
             "candidates": comparison.to_dict(orient="records"),
             "cv_auc": float(selected["auc"]),
             "cv_gini": float(selected["gini"]),
+            # AUC the monotonic constraints cost, measured against the unconstrained model
             "monotonicity_auc_cost": float(
-                comparison.set_index("candidate").loc["lightgbm_unconstrained", "auc"]
-                - comparison.set_index("candidate").loc[lgbm_name, "auc"]
+                by_name.loc["lightgbm_unconstrained", "auc"] - by_name.loc["lightgbm_monotone", "auc"]
             )
-            if sensitivity
+            if "lightgbm_unconstrained" in by_name.index
             else None,
             "threshold": threshold,
             "threshold_rule": "cost_fp / (cost_fp + cost_fn) on calibrated PD",
