@@ -36,6 +36,8 @@ def report(kpis: dict, tables: dict) -> str:
         f"- Grade {worst['grade']} carries {worst['el_share']:.0%} of expected loss with {worst['client_share']:.0%} of clients",
         f"- Riskiest segment: {seg['segment_name']} (mean PD {seg['mean_pd']:.1%}, {seg['client_share']:.0%} of clients)",
         f"- Delinquency {kpis['current_delinquency']:.1%} today; roll-rate projection {kpis['projected_delinquency_3m']:.1%} in 3 months",
+        f"- Portfolio loss at 99.9% exceeds expected loss by {kpis['unexpected_loss_999']:,.0f} (unexpected loss, single-factor model)",
+        f"- Expected loss from new defaults over 12 months (Markov marginal PDs): {kpis['expected_loss_12m_forecast']:,.0f}",
     ]
     if reduce is not None:
         lines.append(

@@ -24,6 +24,21 @@ business:
     min_auc: 0.70
     max_ece: 0.05
     champion_tolerance: 0.005   # max AUC shortfall vs the champion on the same test set
+  ttc:
+    target_pd: 0.20         # illustrative long-run average default rate; set from internal default history
+  portfolio:
+    asset_correlation: 0.04 # Basel QRRE (revolving retail); SME/corporate fleet clients would be 0.12-0.24
+    confidence: 0.999
+  pricing:                  # risk-based price per unit of exposure and review period (illustrative)
+    funding_rate: 0.010
+    cost_of_capital: 0.12
+    opex_rate: 0.005
+    target_margin: 0.005
+  escalation:               # action levels from policy.action_label and the early-warning triggers
+    - {level: Standard,  trigger: "PD below half the cut-off, < 2 warning triggers", action: "Normal limits and pricing; limit increase if grade A/B and utilisation > 80%", owner: "Automated", review: "Monthly batch"}
+    - {level: Watch,     trigger: "PD >= half the cut-off or >= 2 warning triggers",  action: "No limit increase; account manager contacts the client; payment terms reviewed", owner: "Account manager", review: "Within 10 days"}
+    - {level: Intervene, trigger: "PD >= cut-off (cost-optimal, 0.167 by default)",      action: "Undrawn limit reduced; deposit or guarantee requested; collections plan", owner: "Credit risk", review: "Within 48 hours"}
+    - {level: Default,   trigger: "90+ days past due (IFRS 9 stage 3)",                 action: "Card blocked; recovery and legal process; full lifetime provision", owner: "Collections / credit committee", review: "Immediately"}
   monitoring:
     psi_warn: 0.10
     psi_alert: 0.25

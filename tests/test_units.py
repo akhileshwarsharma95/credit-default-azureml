@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from conftest import ROOT, make_synthetic
-from creditrisk import drift, insights, metrics, policy, quality
+from creditrisk import drift, feature_report, insights, metrics, migration, policy, portfolio_risk, quality
 from creditrisk.agent import PortfolioAgent, SqlGuardError, guard_sql
 from creditrisk.config import load
 from creditrisk.features import ENGINEERED, FeatureEngineer
@@ -198,3 +198,41 @@ def test_agent_returns_bad_tool_arguments_to_the_model():
     result = PortfolioAgent(insights.connect({"portfolio": pd.DataFrame({"pd": [0.1]})}), client=client).ask("q")
     assert result.answer == "done"
     assert any(step.detail.startswith("ERROR") for step in result.steps)
+
+
+def test_lifetime_pd_is_the_default_column_of_matrix_powers():
+    # Cohort method: cumulative PD(t) = (M^t)[:, default], marginal PD(t) = cumulative(t) - cumulative(t-1)
+    m = pd.DataFrame([[0.90, 0.08, 0.02], [0.30, 0.50, 0.20], [0.0, 0.0, 1.0]], index=list("ABD"), columns=list("ABD"))
+    out = migration.lifetime_pd(m, months=2, default_state="D").set_index(["from_bucket", "month"])
+    assert out.loc[("A", 1), "cumulative_pd"] == pytest.approx(0.02)
+    assert out.loc[("A", 2), "cumulative_pd"] == pytest.approx(0.054)
+    assert out.loc[("A", 2), "marginal_pd"] == pytest.approx(0.034)
+
+
+def test_ttc_shift_hits_the_target_and_keeps_the_slope():
+    p = np.array([0.01, 0.05, 0.20, 0.50])
+    q = policy.ttc_shift(p, target_mean=0.10)
+    assert q.mean() == pytest.approx(0.10)
+    logit = lambda x: np.log(x / (1 - x))  # noqa: E731
+    assert np.allclose(np.diff(logit(q)), np.diff(logit(p)))
+
+
+def test_credit_var_exceeds_expected_loss_and_rises_with_correlation():
+    ead, lgd, p = np.full(100, 1000.0), np.full(100, 0.6), np.full(100, 0.05)
+    el = float((ead * lgd * p).sum())
+    assert portfolio_risk.credit_var(ead, lgd, p, rho=1e-9, q=0.999) == pytest.approx(el, rel=1e-3)
+    assert portfolio_risk.credit_var(ead, lgd, p, rho=0.12, q=0.999) > portfolio_risk.credit_var(ead, lgd, p, rho=0.04, q=0.999) > el
+
+
+def test_feature_report_ranks_the_informative_feature_first():
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=4000)
+    y = pd.Series((rng.random(4000) < 1 / (1 + np.exp(-2 * x))).astype(int))
+    report = feature_report.feature_report(pd.DataFrame({"signal": x, "noise": rng.normal(size=4000)}), y)
+    assert list(report["feature"]) == ["signal", "noise"]
+    assert report.iloc[0]["trend"] == "increasing" and report.iloc[0]["iv"] > 0.5 > report.iloc[1]["iv"]
+
+
+def test_risk_based_price_rises_with_pd():
+    prices = policy.risk_based_price(np.array([0.01, 0.05, 0.20]), lgd=0.6)
+    assert np.all(np.diff(prices["total_rate"]) > 0)

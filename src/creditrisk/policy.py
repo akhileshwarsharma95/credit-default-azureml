@@ -140,3 +140,37 @@ def action_label(pd_values, threshold: float, ews_count) -> np.ndarray:
     action[(pd_values >= threshold / 2) | (ews_count >= 2)] = "Watch"
     action[pd_values >= threshold] = "Intervene"
     return action
+
+
+def ttc_shift(pd_values, target_mean: float) -> np.ndarray:
+    """Through-the-cycle calibration: shift every PD by the same log-odds constant so the
+    portfolio mean hits the long-run default rate. The ranking (slope) is unchanged."""
+    from scipy.optimize import brentq
+    from scipy.special import expit, logit
+
+    z = logit(np.clip(np.asarray(pd_values, dtype=float), 1e-6, 1 - 1e-6))
+    shift = brentq(lambda c: expit(z + c).mean() - target_mean, -20, 20)
+    return expit(z + shift)
+
+
+def risk_based_price(pd_values, lgd: float, pricing: dict | None = None) -> pd.DataFrame:
+    """Risk-adjusted price per unit of exposure: funding + expected loss + capital charge + opex + margin.
+    The capital charge is the Basel-style unexpected loss at 99.9% times the cost of capital."""
+    from .portfolio_risk import conditional_pd
+
+    p = pricing or _BUSINESS["pricing"]
+    pd_values = np.asarray(pd_values, dtype=float)
+    expected_loss = pd_values * lgd
+    capital = lgd * conditional_pd(pd_values, _BUSINESS["portfolio"]["asset_correlation"], 0.999) - expected_loss
+    out = pd.DataFrame(
+        {
+            "pd": pd_values,
+            "funding_rate": p["funding_rate"],
+            "expected_loss_rate": expected_loss,
+            "capital_charge_rate": capital * p["cost_of_capital"],
+            "opex_rate": p["opex_rate"],
+            "margin_rate": p["target_margin"],
+        }
+    )
+    out["total_rate"] = out.drop(columns="pd").sum(axis=1)
+    return out
