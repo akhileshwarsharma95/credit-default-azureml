@@ -195,3 +195,11 @@ pre.json { background: var(--surface-2); border-radius: 8px; padding: 12px; font
 @media print {
   header, footer { position: static; }
 }
+
+/* horizontal bar charts */
+.bars { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; font-size: 13px; }
+.bar-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.bar-track { background: var(--surface-2); border-radius: 4px; height: 14px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-value { font-variant-numeric: tabular-nums; white-space: nowrap; }

@@ -93,6 +93,7 @@ Requires [uv](https://docs.astral.sh/uv/) (it installs Python 3.10–3.13 and th
 | `make check` | Format check, lint and 46 tests (what CI runs) | `uv run ruff format --check . && uv run ruff check . && uv run pytest -q` |
 | `make format` | Format and apply safe lint fixes | `uv run ruff format . && uv run ruff check . --fix` |
 | `make local` | Every pipeline step locally, MLflow registry on SQLite (~3 min) | `uv run python scripts/run_local.py` |
+| `make analytics` | Feature analysis (IV, default rate by bin) and portfolio risk figures → `docs/analytics/` | `uv run python scripts/risk_analytics.py` |
 | `make app` | Streamlit cockpit | `uv run streamlit run app/streamlit_app.py` |
 | `make deck` | Rebuild the offline presentation | `uv run python docs/presentation/build.py` |
 | `make azure-setup` | Resource group, workspace, GitHub OIDC (see `docs/AZURE_SETUP.md`) | `bash infra/setup_azure.sh` |
@@ -119,7 +120,7 @@ deploy/ monitoring/ infra/   endpoint (blue/green), Azure ML model monitor, work
 app/ Dockerfile    Streamlit cockpit and its container
 environments/      locked conda environments (training/scoring, serving)
 .github/workflows/ ci, train-and-deploy, batch monitoring, app deploy
-docs/              Azure setup, runbook, example model card, images, presentation.html (offline deck; rebuild: make deck)
+docs/              Azure setup, runbook, example model card, images, analytics/ (feature report, portfolio risk), presentation.html (offline deck; rebuild: make deck)
 ```
 
 ## Notes

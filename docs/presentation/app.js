@@ -656,17 +656,172 @@ function Dkv() {
   </div>`;
 }
 
+/* ------------------------------------------------------------------ analytics tabs (data from scripts/risk_analytics.py) */
+const A = window.ANALYTICS;
+const fmtPct = (v, d = 1) => `${(100 * v).toFixed(d)}%`;
+const fmtM = (v) => `NT$ ${(v / 1e6).toFixed(1)} M`;
+
+function Bars({ rows, max, fmt, color }) {
+  const top = max || Math.max(...rows.map((r) => r.value));
+  return html`<div class="bars">${rows.map((r) => html`<div class="bar-row" key=${r.label}>
+    <div class="bar-label" title=${r.label}>${r.label}</div>
+    <div class="bar-track"><div class="bar-fill" style=${{ width: `${(100 * r.value) / top}%`, background: color || "var(--accent)" }}></div></div>
+    <div class="bar-value">${fmt(r.value)}${r.note && html` <span class="muted small">${r.note}</span>`}</div>
+  </div>`)}</div>`;
+}
+
+function DataTab() {
+  const feats = A.features;
+  const binKeys = Object.keys(A.feature_bins);
+  const [cur, setCur] = useState(binKeys[0]);
+  const byName = Object.fromEntries(feats.map((f) => [f.feature, f]));
+  const bins = A.feature_bins[cur];
+  return html`<div>
+    <${Head} title="The data, feature by feature"
+      lead="30,000 clients, 23 raw fields and 13 engineered features. Before any model: what drives default, one feature at a time (information value and default rate per decile)." />
+    <div class="grid g2">
+      <div class="card"><h3>Information value ranking (top 14 of 36)</h3>
+        <${Bars} rows=${feats.slice(0, 14).map((f) => ({ label: f.description, value: f.iv, note: f.strength }))} fmt=${(v) => v.toFixed(2)} />
+        <p class="small muted" style=${{ marginBottom: 0 }}>IV bands: ${"< 0.02"} not predictive · 0.1 weak · 0.3 medium · 0.5 strong. Bill amounts sit at the bottom (IV ${"<"} 0.02).</p>
+      </div>
+      <div class="card"><h3>Default rate by bin</h3>
+        <div class="thumbs"><${Seg} value=${cur} onChange=${setCur} options=${binKeys.map((k) => [k, k])} /></div>
+        <div class="small muted" style=${{ marginBottom: "8px" }}>${byName[cur].description} · IV ${byName[cur].iv.toFixed(2)} · ${byName[cur].trend}</div>
+        <${Bars} rows=${bins.map((b) => ({ label: b.x_min === b.x_max ? `${b.x_min}` : `${Number(b.x_min).toFixed(2)} – ${Number(b.x_max).toFixed(2)}`, value: b.default_rate, note: `${b.clients.toLocaleString("en-US")} clients` }))} max=${1} fmt=${(v) => fmtPct(v, 0)} color="var(--warn)" />
+      </div>
+    </div>
+    <div class="card section"><h3>What the data told me</h3><div class="grid g3 small">
+      <div><b>Behaviour beats balances.</b> Delinquency patterns reach IV 0.78–0.86; bill amounts are not predictive (IV ${"≤"} 0.02). Risk is in how clients pay, not how much they owe.</div>
+      <div><b>Engineered features win.</b> My <code>n_delays</code> (0.86) outranks the raw latest status <code>PAY_1</code> (0.84); recency (<code>months_since_delay</code>) adds what a single month cannot.</div>
+      <div><b>Undocumented codes matter.</b> PAY = −2 / −1 / 0 (no consumption, paid in full, revolving) are not in the data dictionary and are not ordered by risk, so raw PAY is non-monotonic. I keep them as they are and let the engineered delinquency counts carry the signal cleanly.</div>
+      <div><b>Limits carry history.</b> Default rate falls from 35.9% to 12.5% across limit deciles: the limit embeds the lender's earlier assessment.</div>
+      <div><b>Demographics carry almost nothing.</b> Sex (IV 0.009) and marital status (0.005) are excluded anyway and used only for the fairness check.</div>
+      <div><b>A coding quirk.</b> A 1-month delay is almost never recorded before the latest month (7 transitions in the 5,993 test histories), so the 30-dpd migration rate cannot be estimated from this data.</div>
+    </div></div>
+  </div>`;
+}
+
+function Explainability() {
+  const reasons = JSON.parse(SAMPLE_RESPONSE).predictions[0].reason_codes;
+  return html`<div>
+    <${Head} title="Explainability: every PD comes with its reasons"
+      lead="Exact TreeSHAP contributions per client, turned into reason codes that credit officers, the endpoint, the batch output and the cockpit all share." />
+    <div class="grid g2">
+      <div class="card"><figure><img src=${IMG("waterfall_high_risk")} alt="SHAP waterfall" />
+        <figcaption>One client: each bar is a feature's contribution in log-odds, from the portfolio average to this client's PD.</figcaption></figure></div>
+      <div class="card"><figure><img src=${IMG("shap_beeswarm")} alt="SHAP beeswarm" />
+        <figcaption>All clients: delinquency recency, latest status and longest delay drive the PD; colour = feature value.</figcaption></figure></div>
+    </div>
+    <div class="grid g3 section">
+      <div class="card"><h3>From SHAP to reason codes</h3><ol class="small" style=${{ paddingLeft: "18px", margin: 0 }}>
+        <li>TreeSHAP gives each feature's exact contribution for this client (no sampling).</li>
+        <li>Keep the risk-raising contributions, ranked by size.</li>
+        <li>Map each to a stable code and a plain sentence with the client's own values.</li>
+        <li>Deliver the top 4 everywhere: batch file, endpoint response, watchlist, cockpit.</li></ol></div>
+      <div class="card"><h3>Live example (endpoint, client 7926)</h3>
+        <table><tbody>${reasons.map((r) => html`<tr key=${r.code}><td><code>${r.code}</code></td><td>${r.text}</td></tr>`)}</tbody></table>
+        <p class="small muted" style=${{ marginBottom: 0 }}>PD 83% · grade G · action Intervene</p></div>
+      <div class="card"><h3>Why it holds up</h3><ul class="clean small">
+        <li><b>Monotonic constraints:</b> paying later can never lower the PD, so no reason code contradicts common sense</li>
+        <li><b>Same code path</b> for training, batch, endpoint and app: the reason a client sees is the reason the model used</li>
+        <li><b>For DKV:</b> a credit officer can explain a limit decision to a fleet customer in one sentence; EBA loan-origination guidelines expect exactly that</li></ul></div>
+    </div>
+  </div>`;
+}
+
+function PortfolioRisk() {
+  const k = A.kpis;
+  const lq = A.loss_quantiles;
+  const lifetime = A.lifetime_pd.filter((r) => [1, 3, 6, 12].includes(r.month));
+  const buckets = [...new Set(lifetime.map((r) => r.from_bucket))];
+  const cell = (b, m) => lifetime.find((r) => r.from_bucket === b && r.month === m);
+  return html`<div>
+    <${Head} title="Portfolio risk: the total, not the single client"
+      lead="Defaults cluster in a downturn, so the monthly portfolio loss matters more than any one PD. Test portfolio (5,993 clients) scored by model v2." />
+    <div class="grid g4">
+      <${Kpi} accent label="Expected loss" value=${fmtM(lq[0].loss)} note="sum of PD × LGD × EAD" />
+      <${Kpi} accent label="Loss at 99.9%" value=${fmtM(lq[lq.length - 1].loss)} note=${`single-factor model, ρ = ${A.asset_correlation}`} />
+      <${Kpi} accent label="Unexpected loss" value=${fmtM(k.unexpected_loss_999)} note="capital the portfolio needs above EL" />
+      <${Kpi} accent label="Concentration" value=${fmtPct(k.top10_ead_share)} note=${`top-10 EAD share · largest segment ${fmtPct(k.largest_group_ead_share, 0)}`} />
+    </div>
+    <div class="grid g3 section">
+      <div class="card"><h3>Loss distribution</h3>
+        <${Bars} rows=${lq.map((r) => ({ label: r.confidence, value: r.loss }))} fmt=${fmtM} />
+        <p class="small muted" style=${{ marginBottom: 0 }}>Retail cards use Basel's QRRE correlation (0.04); SME and corporate fleet clients would sit at 0.12–0.24, roughly tripling unexpected loss.</p></div>
+      <div class="card"><h3>Lifetime PD from migration (cohort method)</h3>
+        <table><thead><tr><th>From bucket</th>${[1, 3, 6, 12].map((m) => html`<th class="num" key=${m}>${m} m</th>`)}</tr></thead>
+        <tbody>${buckets.map((b) => html`<tr key=${b}><td>${b}</td>${[1, 3, 6, 12].map((m) => html`<td class="num" key=${m}>${fmtPct(cell(b, m).cumulative_pd)}</td>`)}</tr>`)}
+          <tr><td>1 30 dpd</td><td class="num muted" colspan="4">not estimable (7 transitions)</td></tr></tbody></table>
+        <p class="small muted" style=${{ marginBottom: 0 }}>Cumulative PD = (Mᵗ)[default], marginal = Mᵗ − Mᵗ⁻¹ with 90+ dpd absorbing. Covers ${fmtPct(k.markov_coverage, 0)} of the portfolio.</p></div>
+      <div class="card"><h3>Monthly default forecast</h3>
+        <${Bars} rows=${A.default_forecast.map((r) => ({ label: `month ${r.month}`, value: r.expected_defaults }))} fmt=${(v) => `${v.toFixed(0)}`} color="var(--bad)" />
+        <p class="small muted" style=${{ marginBottom: 0 }}>Expected new 90+ dpd defaults; 12-month loss ${fmtM(k.expected_loss_12m_forecast)}. Feeds the IFRS 9 engine as marginal PD vectors.</p></div>
+    </div>
+    <div class="grid g3 section">
+      <div class="card"><h3>Through-the-cycle calibration</h3>
+        <table><thead><tr><th>Grade</th><th class="num">PIT PD</th><th class="num">TTC PD</th><th class="num">Observed</th></tr></thead>
+        <tbody>${A.ttc_by_grade.map((r) => html`<tr key=${r.grade}><td><b>${r.grade}</b></td><td class="num">${fmtPct(r.pd_pit)}</td><td class="num">${fmtPct(r.pd_ttc)}</td><td class="num">${fmtPct(r.observed_dr)}</td></tr>`)}</tbody></table>
+        <p class="small muted" style=${{ marginBottom: 0 }}>The model sets the ranking; one log-odds shift sets the level to the long-run target (${fmtPct(A.ttc_target_pd, 0)}, illustrative). Slope unchanged.</p></div>
+      <div class="card"><h3>Risk-based pricing per grade</h3>
+        <table><thead><tr><th>Grade</th><th class="num">EL</th><th class="num">Capital</th><th class="num">Total price</th></tr></thead>
+        <tbody>${A.pricing_by_grade.map((r) => html`<tr key=${r.grade}><td><b>${r.grade}</b></td><td class="num">${fmtPct(r.expected_loss_rate)}</td><td class="num">${fmtPct(r.capital_charge_rate)}</td><td class="num"><b>${fmtPct(r.total_rate)}</b></td></tr>`)}</tbody></table>
+        <p class="small muted" style=${{ marginBottom: 0 }}>Funding + expected loss + capital × cost of capital + opex + margin, per unit of exposure. For DKV: card fees and payment terms by grade.</p></div>
+      <div class="card"><h3>Escalation matrix</h3>
+        <table><thead><tr><th>Level</th><th>Action</th><th>Owner</th></tr></thead>
+        <tbody>${A.escalation.map((e) => html`<tr key=${e.level}><td><b>${e.level}</b><div class="small muted">${A.actions[e.level] ? `${A.actions[e.level].toLocaleString("en-US")} clients` : "stage 3"}</div></td><td class="small">${e.action}</td><td class="small">${e.owner}<div class="muted">${e.review}</div></td></tr>`)}</tbody></table></div>
+    </div>
+  </div>`;
+}
+
+function Roadmap() {
+  const col = (title, kind, items) => html`<div class="card"><h3><${Pill} kind=${kind}>${title}</${Pill}></h3><ul class="clean small">${items.map((i) => html`<li key=${i}>${i}</li>`)}</ul></div>`;
+  return html`<div>
+    <${Head} title="Roadmap: in place, next, deliberately not"
+      lead="What the engine does today, what I would add with DKV's data, and what I would not build, with the reason." />
+    <div class="grid g3">
+      ${col("In place", "good", [
+        "Pipeline, gated registry, blue/green endpoint, batch monitoring",
+        "Logging, App Insights, PSI drift, model monitor, alerts, runbook",
+        "Feature analysis, SHAP reason codes, fairness check",
+        "Portfolio loss distribution, Markov lifetime PDs, TTC shift, pricing",
+        "Client profile, EWS, escalation matrix, limit steering",
+        "Central config for business and technical parameters",
+      ])}
+      ${col("Next, with DKV data", "accent", [
+        "Retraining loop: join outcomes to collected inputs once the window matures; out-of-time validation by vintage",
+        "Compliance storage: immutable (WORM) blob, lifecycle tiers, 10-year retention, GDPR minimisation",
+        "External data: bureau scores and insolvency notices (Creditreform, D&B, Creditsafe)",
+        "Group view: parent-company exposure, group limits, contagion when one entity defaults",
+        "Industry and macro overlay: default rates by NACE code, freight index, diesel price scenarios",
+        "Scenario LGD: cure / collateral recovery / total loss; segment-level TTC scaling (SMB vs corporate)",
+        "Lag and velocity features from daily transactions (fuel, toll, charging)",
+        "One React front end on the endpoint + a small API",
+      ])}
+      ${col("Deliberately not", "warn", [
+        "A separate model per risk grade: grades come from the PD, so it is circular",
+        "Per-segment models on 30k rows: overfit; one model with segment calibration is the industry pattern",
+        "Resampling the defaults: it breaks calibration, which pricing and provisioning depend on",
+        "Changing the model the night before: new features go through the champion/challenger gate",
+      ])}
+    </div>
+  </div>`;
+}
+
 const TABS = [
   ["overview", "Overview", Overview],
   ["architecture", "Architecture", Architecture],
+  ["data", "Data", DataTab],
   ["training", "Training pipeline", Training],
   ["model", "Model & validation", Model],
+  ["explain", "Explainability", Explainability],
   ["serving", "Serving", Serving],
   ["observability", "Observability", Observability],
   ["reporting", "Reporting", Reporting],
+  ["risk", "Portfolio risk", PortfolioRisk],
   ["cockpit", "Cockpit app", Cockpit],
   ["governance", "CI/CD & governance", Governance],
   ["live", "Live on Azure", Live],
+  ["roadmap", "Roadmap", Roadmap],
   ["dkv", "For DKV Mobility", Dkv],
 ];
 

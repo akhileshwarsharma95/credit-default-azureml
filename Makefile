@@ -4,7 +4,7 @@ RG           ?= rg-credit-risk
 WS           ?= mlw-credit-risk
 
 .DEFAULT_GOAL := help
-.PHONY: help setup lint format test check local app deck azure-setup train batches batch-monitor deploy invoke delete-endpoint lock
+.PHONY: help setup lint format test check local analytics app deck azure-setup train batches batch-monitor deploy invoke delete-endpoint lock
 
 help:  ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -25,6 +25,9 @@ check: lint test  ## Lint and test (what CI runs)
 
 local:  ## Full pipeline locally with a SQLite MLflow registry (~3 min)
 	uv run python scripts/run_local.py
+
+analytics:  ## Feature analysis + portfolio risk figures for the deck (docs/analytics/)
+	uv run python scripts/risk_analytics.py
 
 app:  ## Streamlit cockpit (registered model in app/model, else the local package)
 	uv run streamlit run app/streamlit_app.py

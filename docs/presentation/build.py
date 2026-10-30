@@ -93,7 +93,11 @@ def main() -> None:
         "/*STYLES*/", (HERE / "vendor" / "xyflow-react.css").read_text() + "\n" + (HERE / "styles.css").read_text()
     )
     html = html.replace("/*VENDOR*/", vendor.replace("</script", "<\\/script"))
-    html = html.replace("/*ASSETS*/", f"window.ICONS = {json.dumps(icons)};\nwindow.IMAGES = {json.dumps(images)};")
+    analytics = (DOCS / "analytics" / "analytics.json").read_text()  # from scripts/risk_analytics.py
+    html = html.replace(
+        "/*ASSETS*/",
+        f"window.ICONS = {json.dumps(icons)};\nwindow.IMAGES = {json.dumps(images)};\nwindow.ANALYTICS = {analytics};",
+    )
     html = html.replace("/*APP*/", (HERE / "app.js").read_text())
     html = html.replace("/*FAVICON*/", icons["dkv-mobility"])
     OUT.write_text(html)

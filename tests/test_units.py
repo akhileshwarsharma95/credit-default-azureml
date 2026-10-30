@@ -221,7 +221,11 @@ def test_credit_var_exceeds_expected_loss_and_rises_with_correlation():
     ead, lgd, p = np.full(100, 1000.0), np.full(100, 0.6), np.full(100, 0.05)
     el = float((ead * lgd * p).sum())
     assert portfolio_risk.credit_var(ead, lgd, p, rho=1e-9, q=0.999) == pytest.approx(el, rel=1e-3)
-    assert portfolio_risk.credit_var(ead, lgd, p, rho=0.12, q=0.999) > portfolio_risk.credit_var(ead, lgd, p, rho=0.04, q=0.999) > el
+    assert (
+        portfolio_risk.credit_var(ead, lgd, p, rho=0.12, q=0.999)
+        > portfolio_risk.credit_var(ead, lgd, p, rho=0.04, q=0.999)
+        > el
+    )
 
 
 def test_feature_report_ranks_the_informative_feature_first():
