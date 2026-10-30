@@ -75,18 +75,14 @@ def client_profile(fact: pd.DataFrame, client_id: int, raw: pd.Series) -> None:
     level = next((e for e in ESCALATION if e["level"] == c["action"]), None)
     seg = fact[fact["segment_name"] == c["segment_name"]]
     st.markdown(f"#### Client {client_id} · {c['segment_name']}")
-    k = st.columns(6)
-    tile(
-        k[0],
-        "PD / grade",
-        f"{pct(c['pd'])} · {c['grade']}",
-        f"riskier than {(fact['pd'] < c['pd']).mean():.0%} of clients",
-    )
-    tile(k[1], "Action level", c["action"], level["review"] if level else None)
-    tile(k[2], "IFRS 9 stage", str(int(c["ifrs9_stage"])))
-    tile(k[3], f"Exposure ({CCY})", money(c["ead"], False), f"limit {money(c['LIMIT_BAL'], False)}")
-    tile(k[4], f"Expected loss ({CCY})", money(c["el"], False))
-    tile(k[5], "Within segment", f"top {1 - (seg['pd'] < c['pd']).mean():.0%}", f"{len(seg):,} peers")
+    top, bottom = st.columns(3), st.columns(3)
+    riskier = f"riskier than {(fact['pd'] < c['pd']).mean():.0%} of clients"
+    tile(top[0], "PD · grade", f"{pct(c['pd'])} · {c['grade']}", riskier)
+    tile(top[1], "Action level", c["action"], level["review"] if level else None)
+    tile(top[2], "Within segment", f"top {1 - (seg['pd'] < c['pd']).mean():.0%}", f"of {len(seg):,} peers by PD")
+    tile(bottom[0], f"Exposure ({CCY})", money(c["ead"], False), f"limit {money(c['LIMIT_BAL'], False)}")
+    tile(bottom[1], f"Expected loss ({CCY})", money(c["el"], False))
+    tile(bottom[2], "IFRS 9 stage", str(int(c["ifrs9_stage"])))
     months = list(reversed(MONTHS))
     fig = go.Figure(
         [
