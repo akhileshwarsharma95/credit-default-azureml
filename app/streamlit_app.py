@@ -23,6 +23,7 @@ import streamlit as st
 
 from creditrisk import drift, explain, insights, metrics, policy
 from creditrisk.agent import PortfolioAgent
+from creditrisk.config import load
 from creditrisk.observability import configure, timed
 from creditrisk.schema import EDUCATION_LABELS, MONTHS, PAY_STATUS_LABELS, describe
 from creditrisk.scoring import load_package, score_frame
@@ -46,6 +47,7 @@ STATUS = {
 LIGHT_ICON = {"green": "🟢 green", "amber": "🟠 amber", "red": "🔴 red", "insufficient": "⚪ too few clients"}
 BLUE_RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
 CCY = "NT$"
+ESCALATION = load()["business"]["escalation"]
 SHORT_STATUS = {-2: "No use", -1: "Paid full", 0: "Revolving"}
 
 
@@ -65,6 +67,48 @@ def tile(col, label: str, value: str, note: str | None = None, help: str | None 
 
 def pct(v, nd: int = 1) -> str:
     return "n/a" if v is None or (isinstance(v, float) and np.isnan(v)) else f"{v:.{nd}%}"
+
+
+def client_profile(fact: pd.DataFrame, client_id: int, raw: pd.Series) -> None:
+    """Who the client is today: segment, grade, action level, exposure and the 6-month payment history."""
+    c = fact[fact["ID"] == client_id].iloc[0]
+    level = next((e for e in ESCALATION if e["level"] == c["action"]), None)
+    seg = fact[fact["segment_name"] == c["segment_name"]]
+    st.markdown(f"#### Client {client_id} · {c['segment_name']}")
+    k = st.columns(6)
+    tile(
+        k[0],
+        "PD / grade",
+        f"{pct(c['pd'])} · {c['grade']}",
+        f"riskier than {(fact['pd'] < c['pd']).mean():.0%} of clients",
+    )
+    tile(k[1], "Action level", c["action"], level["review"] if level else None)
+    tile(k[2], "IFRS 9 stage", str(int(c["ifrs9_stage"])))
+    tile(k[3], f"Exposure ({CCY})", money(c["ead"], False), f"limit {money(c['LIMIT_BAL'], False)}")
+    tile(k[4], f"Expected loss ({CCY})", money(c["el"], False))
+    tile(k[5], "Within segment", f"top {1 - (seg['pd'] < c['pd']).mean():.0%}", f"{len(seg):,} peers")
+    months = list(reversed(MONTHS))
+    fig = go.Figure(
+        [
+            go.Bar(name="Bill", x=months, y=[raw[f"BILL_AMT{i}"] for i in range(6, 0, -1)], marker_color="#9fb3c8"),
+            go.Bar(name="Paid", x=months, y=[raw[f"PAY_AMT{i}"] for i in range(6, 0, -1)], marker_color="#0078d4"),
+        ]
+    )
+    status = [PAY_STATUS_LABELS.get(int(raw[f"PAY_{i}"]), str(raw[f"PAY_{i}"])) for i in range(6, 0, -1)]
+    fig.update_layout(
+        barmode="group",
+        height=260,
+        margin={"t": 10, "b": 10},
+        xaxis={"ticktext": [f"{m}<br>{s}" for m, s in zip(months, status, strict=True)], "tickvals": months},
+    )
+    left, right = st.columns([3, 2])
+    left.plotly_chart(fig, width="stretch")
+    with right:
+        st.markdown("**Early-warning triggers**")
+        st.write(c["ews_triggers"] or "None")
+        if level:
+            st.markdown(f"**Escalation:** {level['action']} · owner: {level['owner']}")
+        st.markdown(f"**Limit advice:** {c['limit_action']} ({money(c['recommended_limit'], False)})")
 
 
 def style(fig: go.Figure, title: str | None = None, height: int = 330, legend: bool = True) -> go.Figure:
@@ -342,6 +386,7 @@ with tab_client:
             st.rerun()
 
     base_row = PORTFOLIO_RAW[PORTFOLIO_RAW["ID"] == client_id].iloc[0]
+    client_profile(fact, client_id, base_row)
     with st.form("client_form"):
         st.markdown("**Client features** (edit any value for a what-if)")
         c1, c2 = st.columns([1, 3])
