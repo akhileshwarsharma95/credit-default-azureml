@@ -77,11 +77,15 @@ flowchart LR
 | Backtesting | Jeffreys test per grade with traffic lights; realised AUC vs. validation AUC on labelled batches |
 | Drift monitoring | PSI per feature, score and rating grade vs. a baseline stored with each model (`src/monitor_drift.py`); Azure ML model monitor on the endpoint |
 | Explainability | Exact TreeSHAP / linear SHAP per client, reason codes in batch output, endpoint response and app |
-| Pipelines: testing, versioning, docs, incidents | 46 tests in CI, ruff, versioned data/model/environment, uv-locked dependencies, central config, model card per version, `docs/RUNBOOK.md` |
+| Pipelines: testing, versioning, docs, incidents | 53 tests in CI, ruff, versioned data/model/environment, uv-locked dependencies, central config, model card per version, `docs/RUNBOOK.md` |
 | Loss data, early warning, limit steering, clustering, portfolio insights | `creditrisk/policy.py` + SQL in `creditrisk/sql/`: EL, IFRS 9 staging, watchlist, limit actions, k-means segments, roll rates and a 3-month Markov projection |
 | Python and SQL | Python package + DuckDB SQL, Power BI-ready output tables |
 | GenAI "talk to your data" | `creditrisk/agent.py`: tool-calling agent with SELECT-only SQL, locked-down DuckDB, OpenTelemetry tracing; offline fallback |
 | Monitoring, tracing, observability | MLflow in Azure ML, Application Insights (endpoint + app), OpenTelemetry spans, Azure Monitor alerts |
+
+## Specification
+
+`docs/SPEC.md` is the specification this build implements: business, data, model, validation, serving, monitoring, compliance (incl. EU AI Act) and engineering requirements, each with its acceptance test, plus a traceability table.
 
 ## Commands
 
@@ -90,7 +94,7 @@ Requires [uv](https://docs.astral.sh/uv/) (it installs Python 3.10–3.13 and th
 | Target | What it does | Command |
 |---|---|---|
 | `make setup` | Install the locked environment, download the UCI data | `uv sync && uv run python scripts/download_data.py` |
-| `make check` | Format check, lint and 46 tests (what CI runs) | `uv run ruff format --check . && uv run ruff check . && uv run pytest -q` |
+| `make check` | Format check, lint and 53 tests (what CI runs) | `uv run ruff format --check . && uv run ruff check . && uv run pytest -q` |
 | `make format` | Format and apply safe lint fixes | `uv run ruff format . && uv run ruff check . --fix` |
 | `make local` | Every pipeline step locally, MLflow registry on SQLite (~3 min) | `uv run python scripts/run_local.py` |
 | `make analytics` | Feature analysis (IV, default rate by bin) and portfolio risk figures → `docs/analytics/` | `uv run python scripts/risk_analytics.py` |

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import logging
 from types import SimpleNamespace
 
 import numpy as np
@@ -246,3 +247,10 @@ def test_lifetime_pd_skips_buckets_without_enough_observed_migrations():
     m = pd.DataFrame([[0.90, 0.08, 0.02], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], index=list("ABD"), columns=list("ABD"))
     out = migration.lifetime_pd(m, months=3, default_state="D", transitions={"A": 5000, "B": 7, "D": 300})
     assert set(out["from_bucket"]) == {"A"}
+
+
+def test_logging_setup_keeps_azure_sdk_http_logs_quiet():
+    from creditrisk.observability import configure
+
+    configure()
+    assert logging.getLogger("azure").level == logging.WARNING

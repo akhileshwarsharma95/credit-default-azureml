@@ -42,6 +42,7 @@ def configure(service_name: str = "credit-risk") -> None:
         return
     _CONFIGURED = True
     logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logging.getLogger("azure").setLevel(logging.WARNING)  # the Azure SDK logs every HTTP request at INFO
     conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
     if not conn:
         return

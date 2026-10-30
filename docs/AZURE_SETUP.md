@@ -33,7 +33,7 @@ The workspace creates its own storage account, key vault and Application Insight
    bash infra/setup_azure.sh
    ```
    This registers the resource providers, creates `rg-credit-risk` and the workspace, writes `.env`, and (with `GITHUB_REPO`) creates an Entra app with **federated credentials** so GitHub Actions can log in with no stored password. It prints the three secrets and three variables to add in GitHub (or sets them with `gh`).
-4. **Check compute quota** in Azure ML studio (ml.azure.com) -> *Compute* -> *Quota*. The cluster and the endpoint use `Standard_D2as_v4` (2 vCPU, 8 GB; DASv4 family), max 2 nodes = 4 vCPUs, set in `src/creditrisk/config.yaml`. If that family shows 0, pick one that has quota (`export AZUREML_VM_SIZE=...`, `AZUREML_ENDPOINT_SKU=...`) or request an increase (usually approved within minutes for small numbers).
+4. **Check compute quota** in Azure ML studio (ml.azure.com) -> *Compute* -> *Quota*. The cluster uses `Standard_D2ds_v5` (DDSv5 family) and the endpoint `Standard_D2as_v4` (DASv4 family), both 2 vCPU / 8 GB, set in `src/creditrisk/config.yaml`. They are in different families on purpose: an endpoint holds its vCPUs plus a 20% reserve, and on a 4-vCPU family quota it would leave the cluster no node. If a family shows 0, pick one that has quota (`AZUREML_VM_SIZE`, `AZUREML_ENDPOINT_SKU`) or request an increase (usually approved within minutes for small numbers).
 
 ## 3. Run the case study
 
@@ -80,7 +80,7 @@ Cloud: `bash scripts/deploy_app.sh` builds the root `Dockerfile` and deploys it 
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci` | every push / PR | ruff format + lint, 46 tests (end to end on synthetic data), dry-run of every Azure spec |
+| `ci` | every push / PR | ruff format + lint, 53 tests (end to end on synthetic data), dry-run of every Azure spec |
 | `train-and-deploy` | push to `main` touching model code, or manual | CI -> Azure ML pipeline (OIDC) -> model card in the job summary -> optional blue/green deploy behind the `production` environment |
 | `batch-scoring-and-monitoring` | manual | scores a demo batch and runs the drift monitor |
 | `deploy-app` | manual | deploys the Streamlit app to Container Apps |

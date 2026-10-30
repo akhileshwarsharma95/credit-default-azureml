@@ -60,7 +60,7 @@ technical:
     resource_group: rg-credit-risk
     workspace: mlw-credit-risk
     compute: cpu-cluster
-    vm_size: Standard_D2as_v4
+    vm_size: Standard_D2ds_v5     # DDSv5 family; the endpoint uses DASv4, so they never compete for quota
     max_nodes: 2
     experiment: credit-default
     model_name: credit-default-model
