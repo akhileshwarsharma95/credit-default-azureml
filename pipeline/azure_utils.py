@@ -44,6 +44,8 @@ DEFAULTS = {
 
 
 def get_ml_client():
+    """Workspace from AZURE_SUBSCRIPTION_ID plus resource group / workspace (environment, else config.yaml);
+    without a subscription ID, from the config.json downloaded from the portal."""
     from azure.ai.ml import MLClient
     from azure.identity import DefaultAzureCredential
 
@@ -51,6 +53,7 @@ def get_ml_client():
     credential = DefaultAzureCredential(exclude_interactive_browser_credential=False)
     sub, rg, ws = os.getenv("AZURE_SUBSCRIPTION_ID"), DEFAULTS["resource_group"], DEFAULTS["workspace"]
     if sub and rg and ws:
+        LOGGER.info(f"Using workspace {ws} in resource group {rg}")
         return MLClient(credential, sub, rg, ws)
     return MLClient.from_config(credential=credential)  # falls back to config.json from the portal
 

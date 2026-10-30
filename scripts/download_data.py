@@ -7,6 +7,7 @@ reachable, falls back to a public GitHub copy of the same 30,000 rows (CSV).
 from __future__ import annotations
 
 import argparse
+import http.client
 import io
 import shutil
 import urllib.request
@@ -49,7 +50,7 @@ def main() -> None:
     if args.source == "uci":
         try:
             path = from_uci(dest)
-        except (OSError, zipfile.BadZipFile, StopIteration) as exc:  # network error or unexpected archive
+        except (OSError, http.client.HTTPException, zipfile.BadZipFile, StopIteration) as exc:  # network or archive
             LOGGER.warning(f"UCI download failed ({exc}); using GitHub mirror")
             path = from_mirror(dest)
     else:
