@@ -664,17 +664,17 @@ header { background: var(--surface); border-bottom: 1px solid var(--border); pos
   padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer;
 }
 .iconbtn:hover { color: var(--text); border-color: var(--edge); }
-nav.tabs { display: flex; gap: 2px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs { display: flex; flex-wrap: wrap; gap: 0 2px; padding: 0 16px; }
 nav.tabs::-webkit-scrollbar { display: none; }
 nav.tabs button {
   border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px; padding: 10px 12px 9px;
-  border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap;
+  border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; font-size: 13.5px; padding: 8px 10px 7px;
 }
 nav.tabs button:hover { color: var(--text); }
 nav.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 nav.tabs .num { font-size: 11px; opacity: .6; margin-right: 6px; font-variant-numeric: tabular-nums; }
 
-main { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 24px 24px 64px; }
+main { flex: 1; width: 100%; max-width: 1480px; margin: 0 auto; padding: 24px 24px 64px; }
 footer {
   position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
   padding: 6px 24px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--bg) 88%, transparent);
@@ -740,6 +740,17 @@ tr.hl td { background: var(--accent-soft); }
 
 /* architecture diagram (React Flow) */
 .rf-wrap { padding: 0; overflow: hidden; width: 100%; aspect-ratio: 1280 / 700; min-height: 320px; }
+.arch-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.side-panel { position: sticky; top: 120px; }
+.side-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.side-head img { width: 36px; height: 36px; }
+.side-head h3 { margin: 0; }
+.side-head .n { display: inline-flex; width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; align-items: center; justify-content: center; }
+.side-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+.file-list { display: flex; flex-direction: column; gap: 4px; }
+.file-list code { font-size: 12px; align-self: flex-start; }
+.pill-btn { border: 0; cursor: pointer; font: inherit; font-size: 12px; }
+@media (max-width: 1100px) { .arch-layout { grid-template-columns: minmax(0, 1fr); } .side-panel { position: static; } }
 .rf-wrap .react-flow { --xy-background-color: var(--surface); --xy-edge-label-background-color: var(--surface); }
 .rf-wrap .react-flow__handle { opacity: 0; width: 6px; height: 6px; min-width: 0; min-height: 0; border: 0; pointer-events: none; }
 .rf-wrap .react-flow__node-zone { pointer-events: none; }
@@ -810,6 +821,29 @@ pre.json { background: var(--surface-2); border-radius: 8px; padding: 12px; font
 .bar-track { background: var(--surface-2); border-radius: 4px; height: 14px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 4px; }
 .bar-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* project structure tree */
+.tree { display: flex; flex-direction: column; gap: 4px; }
+.tree-head, .tree-file { display: grid; grid-template-columns: 18px auto 1fr; gap: 10px; align-items: baseline; width: 100%; text-align: left; border: 0; background: none; padding: 7px 8px; border-radius: 6px; cursor: pointer; font: inherit; color: var(--text); }
+.tree-file { grid-template-columns: minmax(0, 300px) 1fr; padding-left: 36px; }
+.tree-head:hover, .tree-file:hover { background: var(--surface-2); }
+.tree-head.on { background: var(--accent-soft); }
+.tree-file.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.tree-file code { white-space: normal; }
+.caret { color: var(--muted); }
+
+/* business overview */
+.biz-wrap { aspect-ratio: 1280 / 560; }
+.rf-biz { width: 180px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--surface); border: 1.2px solid var(--border); border-radius: 10px; cursor: pointer; position: relative; padding: 4px 8px; transition: opacity .25s, box-shadow .2s, border-color .2s, transform .2s; }
+.rf-biz b { font-size: 13px; }
+.rf-biz span { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.rf-biz-n { position: absolute; top: -10px; left: -10px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.rf-biz:hover, .rf-biz.sel { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.rf-biz.sel { transform: scale(1.06); }
+.rf-biz.dim { opacity: .25; }
+.formula { font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); border-radius: 6px; padding: 8px 10px; margin: 6px 0 2px; }
+
+.link-btn { text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-block; }
 </style>
 </head>
 <body>
@@ -2520,8 +2554,15 @@ const WS = {
   rg: "rg-credit-risk",
   name: "mlw-credit-risk",
 };
-const studio = (run) =>
-  `https://ml.azure.com/runs/${run}?wsid=/subscriptions/${WS.sub}/resourcegroups/${WS.rg}/workspaces/${WS.name}&tid=${WS.tenant}`;
+const WSID = `wsid=/subscriptions/${WS.sub}/resourcegroups/${WS.rg}/workspaces/${WS.name}&tid=${WS.tenant}`;
+const studio = (run) => `https://ml.azure.com/runs/${run}?${WSID}`;
+const STUDIO = {
+  model: (v) => `https://ml.azure.com/model/credit-default-model:${v}/details?${WSID}`,
+  endpoint: `https://ml.azure.com/endpoints/realtime/credit-risk-fb1504/detail?${WSID}`,
+  data: `https://ml.azure.com/data/credit-default-raw/1/details?${WSID}`,
+  jobs: `https://ml.azure.com/experiments?${WSID}`,
+};
+const LinkBtn = ({ href, children, primary }) => html`<a class=${"iconbtn link-btn" + (primary ? " on" : "")} href=${href} target="_blank" rel="noopener">${children} ↗</a>`;
 
 /* ------------------------------------------------------------------ shared bits */
 const Kpi = ({ label, value, note, accent }) => html`
@@ -2638,6 +2679,33 @@ const DETAILS = {
 };
 
 
+const NODE_INFO = {
+  repo: [[".github/", "pyproject.toml", "uv.lock", "Makefile"], "Everything is code, including the Azure setup and the environments."],
+  ci: [[".github/workflows/ci.yml", "tests/"], "Nothing reaches Azure without passing format, lint, 53 tests and spec dry-runs."],
+  cd: [[".github/workflows/train-and-deploy.yml"], "Training runs on every model-code push; deployment needs a human approval."],
+  storage: [["pipeline/azure_utils.py (ensure_data_asset)"], "Same file, same version: the sha256 tag makes data lineage provable."],
+  acr: [["environments/conda.yaml", "scripts/lock_env.py"], "Built once from the lock; every step and the endpoint run the tested versions."],
+  entra: [["infra/setup_azure.sh"], "No stored secrets: GitHub gets short-lived tokens, Contributor on one resource group."],
+  kv: [["(created with the workspace)"], "Secrets never live in the repo or in GitHub."],
+  pre: [["src/preprocess.py", "src/creditrisk/quality.py", "components/preprocess.yml"], "Bad data stops the run; undocumented codes are cleaned and reported."],
+  trn: [["src/train.py", "src/creditrisk/modeling.py", "src/creditrisk/features.py"], "Monotonic LightGBM: same AUC as unconstrained, explanations that always make sense."],
+  evl: [["src/evaluate.py", "src/creditrisk/metrics.py", "src/creditrisk/explain.py"], "Scores the registered champion on the same test set: that is the gate's evidence."],
+  reg: [["src/register.py", "src/creditrisk/model_card.py"], "Registered only if better than the champion; the model card travels with it."],
+  cluster: [["pipeline/azure_utils.py (ensure_compute)", "config.yaml technical.azure"], "Scales to zero; on its own quota family so the endpoint can never block it."],
+  registry: [["src/register.py", "scripts/fetch_model.py"], "Every version carries its model card, evidence, drift baseline, git SHA and data version."],
+  score: [["src/score_batch.py", "src/creditrisk/scoring.py"], "One scoring function for batch, endpoint and app: no training/serving skew."],
+  drift: [["src/monitor_drift.py", "src/creditrisk/drift.py"], "PSI against the baseline stored with the model: alert at 0.25."],
+  insights: [["src/portfolio_insights.py", "src/creditrisk/insights.py", "src/creditrisk/sql/"], "Turns PDs into EL, stages, watchlist, limits, Markov lifetime PDs and the loss distribution."],
+  modelmon: [["monitoring/setup_model_monitor.py"], "Daily drift and data-quality checks on what the endpoint actually receives."],
+  endpoint: [["deploy/deploy_endpoint.py", "src/serving/score.py"], "Blue/green with a smoke test; bad input gets a 400 with the required fields."],
+  appins: [["src/creditrisk/observability.py"], "Requests, latency and OpenTelemetry spans from the endpoint and the app."],
+  logs: [["(workspace behind App Insights)"], "KQL over traces and requests for incidents."],
+  alerts: [["infra/alerts.sh", "docs/RUNBOOK.md"], "Every alert points to a runbook playbook with an owner."],
+  powerbi: [["src/creditrisk/sql/"], "Flat tables per batch, ready for a Power BI model."],
+  app: [["app/streamlit_app.py", "Dockerfile", "scripts/deploy_app.sh"], "The credit officer's view: client profile, what-if, cut-off economics, drift simulator."],
+  openai: [["src/creditrisk/agent.py"], "One SELECT-only tool on a locked-down DuckDB; every call traced; labelled as AI (Art. 50)."],
+};
+
 const SIDES = { t: "Top", r: "Right", b: "Bottom", l: "Left" };
 const Handles = () => Object.entries(SIDES).map(([k, p]) => html`
   <${RF.Handle} key=${"s" + k} id=${"s-" + k} type="source" position=${RF.Position[p]} isConnectable=${false} />
@@ -2667,6 +2735,157 @@ function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targ
 }
 const NODE_TYPES = { svc: SvcNode, step: StepNode, zone: ZoneNode };
 const EDGE_TYPES = { flow: FlowEdge };
+
+/* ------------------------------------------------------------------ business overview */
+// Follows one real client (7926, scored live by the endpoint) through every stage.
+const BIZ = {
+  data: { x: 110, y: 250, n: "1", t: "Client behaviour", f: "6 months of history",
+    q: "What do we know about the client?",
+    formula: "limit · 6 bills · 6 payments · 6 payment statuses",
+    how: ["Last 6 monthly statements: balance, amount paid, months late", "Turned into behaviour signals: how often late, how recently, repayment ratio, utilisation"],
+    why: "How a client pays predicts default far better than how much they owe (delinquency signals are 40× more informative than bill amounts).",
+    meaning: "The model never sees sex, age or marital status; only behaviour.",
+    ex: "2 months late in September, 3 late payments in the last 3 months, last late payment 1 month ago." },
+  pd: { x: 340, y: 110, n: "2", t: "Probability of default", f: "PD = P(default next month)",
+    q: "How likely is the client not to pay?",
+    formula: "PD = calibrated model output, floored at 0.1%",
+    how: ["Monotonic LightGBM ranks clients by risk", "Isotonic calibration turns scores into true probabilities", "Floor 0.1%: nobody is risk-free (CRR3)"],
+    why: "Every money decision downstream multiplies by the PD, so it must be right in level, not just in order. Calibration is checked per grade.",
+    meaning: "PD 20% = out of 100 similar clients, about 20 miss next month's payment.",
+    ex: "PD 83.3%: out of 100 clients like 7926, about 83 would miss the next payment." },
+  ead: { x: 340, y: 250, n: "3", t: "Exposure at default", f: "EAD = drawn + CCF × undrawn",
+    q: "How much would they owe if they default?",
+    formula: "EAD = drawn balance + 50% × unused limit",
+    how: ["Drawn = current statement balance", "CCF 50%: share of the unused limit typically drawn before default"],
+    why: "Clients in trouble tend to use their remaining limit before they stop paying, so today's balance understates the exposure.",
+    meaning: "The unused limit is risk too, which is why reducing limits reduces loss.",
+    ex: "EAD NT$ 41,450." },
+  lgd: { x: 340, y: 390, n: "4", t: "Loss given default", f: "LGD = 1 − recovery",
+    q: "If they default, how much do we lose?",
+    formula: "LGD = 60% (unsecured card)",
+    how: ["Today a documented assumption (no loss data in UCI)", "Target: scenario-weighted cure / collateral recovery / total loss"],
+    why: "Recoveries (collections, deposits, guarantees) reduce the loss; without collateral most of the exposure is lost.",
+    meaning: "Deposits and guarantees lower LGD, which is why 'Intervene' asks for them.",
+    ex: "LGD 60%." },
+  grade: { x: 590, y: 70, n: "5", t: "Rating grade", f: "PD → A … G",
+    q: "Which risk class is the client in?",
+    formula: "A 0–5% · B 5–8% · C 8–12% · D 12–20% · E 20–35% · F 35–55% · G 55%+",
+    how: ["Fixed PD bands (the master scale)", "Each grade is backtested: predicted vs observed default rate"],
+    why: "Policies, reports and reviews need stable classes, not raw probabilities.",
+    meaning: "'No limit increase above D' is a policy a credit team can run.",
+    ex: "Grade G (PD above 55%)." },
+  el: { x: 590, y: 280, n: "6", t: "Expected loss", f: "EL = PD × LGD × EAD",
+    q: "What does this client cost us on average?",
+    formula: "EL = PD × LGD × EAD",
+    how: ["Multiply the three building blocks per client", "Sum over clients for the portfolio"],
+    why: "It turns risk into money: comparable across clients, segments and products.",
+    meaning: "EL is a cost of doing business: it has to be covered by price and by provisions.",
+    ex: "0.833 × 0.60 × 41,450 = NT$ 20,725." },
+  action: { x: 840, y: 90, n: "7", t: "Decision & escalation", f: "act if PD ≥ 1 / (1 + 5)",
+    q: "Do we act, and who acts by when?",
+    formula: "cut-off = cost of false alarm / (false alarm + missed default) = 1 / 6 = 0.167",
+    how: ["Missing a defaulter costs about 5× a needless intervention", "Plus early-warning triggers (new delinquency, payment shortfall …)", "Levels: Standard → Watch → Intervene → Default, each with an owner and a deadline"],
+    why: "The cut-off comes from business costs, not from the model; change the costs and the policy follows.",
+    meaning: "At 0.167 we catch 71% of defaulters while contacting 40% of clients, 49% cheaper than doing nothing.",
+    ex: "Intervene (PD ≥ 0.167; triggers: paid less than 10% of the last bill, grade F/G): credit risk, within 48 hours." },
+  limits: { x: 840, y: 250, n: "8", t: "Limits & pricing", f: "price = funding + EL + capital + costs",
+    q: "How much credit, at what price?",
+    formula: "price = funding + EL rate + capital × cost of capital + opex + margin",
+    how: ["Reduce undrawn limits for F/G, raise limits for A/B at high utilisation", "Price per grade covers expected and unexpected loss"],
+    why: "Lower limits cut EAD and so EL; risk-based prices keep good clients and charge for risk.",
+    meaning: "For DKV: card limits, payment terms (14 vs 30 days), fees and deposits by grade.",
+    ex: "Limit reduced to NT$ 37,000; grade G price about 46% per unit of exposure." },
+  provision: { x: 840, y: 400, n: "9", t: "Provision (IFRS 9)", f: "stage 1: 12 m · stage 2: lifetime",
+    q: "How much do we set aside in the balance sheet?",
+    formula: "ECL = horizon PD × LGD × EAD (12 months in stage 1, lifetime in stage 2, PD = 1 in stage 3)",
+    how: ["Stage 2 if 30+ days late or grade F/G (significant increase in risk)", "Stage 3 at 90+ days late", "Lifetime PDs from monthly migration between delinquency buckets (Markov)"],
+    why: "Accounting must recognise expected losses early, and more of them once risk has risen.",
+    meaning: "Moving a client to stage 2 increases the provision and hits profit immediately.",
+    ex: "Stage 2: lifetime ECL NT$ 24,755." },
+  portfolio: { x: 1080, y: 250, n: "10", t: "Portfolio & capital", f: "loss at 99.9% − EL = capital",
+    q: "How much risk does the whole book carry?",
+    formula: "loss at 99.9% = Σ EAD × LGD × PD in a severe downturn (single-factor model)",
+    how: ["Clients default together in a recession (correlation)", "Expected loss vs loss in a 1-in-1000 year", "Concentration by client and segment"],
+    why: "Average losses are priced in; bad years are covered by capital. The total matters more than any one client.",
+    meaning: "Test portfolio: EL NT$ 70.6 M, 99.9% loss NT$ 132.3 M, so NT$ 61.6 M of capital.",
+    ex: "Client 7926 contributes NT$ 20,725 to the portfolio's expected loss." },
+  monitor: { x: 1080, y: 410, n: "11", t: "Monitoring & feedback", f: "PSI ≥ 0.25 → alert",
+    q: "Is the model still right?",
+    formula: "PSI = Σ (actual − expected) × ln(actual / expected), per feature and score",
+    how: ["Weekly: compare new clients with the training profile", "Monthly: backtest predicted vs actual defaults per grade", "Alert → runbook → retrain → the champion/challenger gate decides"],
+    why: "Economies and portfolios change; a model is only as good as its last check.",
+    meaning: "The simulated downturn raised a drift alert (score PSI 0.34): credit management is told before losses show.",
+    ex: "Next month, 7926's actual outcome feeds the backtest of grade G." },
+};
+const BIZ_EDGES = [
+  ["data", "r", "pd", "l", "signals"], ["data", "r", "ead", "l"], ["data", "r", "lgd", "l", "loss history"],
+  ["pd", "t", "grade", "l"], ["pd", "r", "el", "l"], ["ead", "r", "el", "l"], ["lgd", "r", "el", "l"],
+  ["grade", "r", "action", "l"], ["pd", "r", "action", "l", "cut-off"],
+  ["el", "r", "limits", "l"], ["grade", "r", "limits", "t"], ["el", "r", "provision", "l"],
+  ["el", "r", "portfolio", "l"], ["provision", "r", "portfolio", "l"], ["limits", "r", "portfolio", "l"],
+  ["portfolio", "b", "monitor", "t"], ["action", "r", "monitor", "t", "outcomes"],
+  ["monitor", "b", "pd", "b", "retrain", true],
+];
+const BIZ_ORDER = ["data", "pd", "ead", "lgd", "grade", "el", "action", "limits", "provision", "portfolio", "monitor"];
+
+const BizNode = ({ data }) => html`<div class=${"rf-biz" + (data.sel ? " sel" : "") + (data.dim ? " dim" : "")}>
+  <${Handles} /><div class="rf-biz-n">${data.n}</div><b>${data.t}</b><span>${data.f}</span></div>`;
+const BIZ_NODE_TYPES = { biz: BizNode };
+
+function BusinessOverview({ dark }) {
+  const [sel, setSel] = useState("data");
+  const [play, setPlay] = useState(false);
+  useEffect(() => {
+    if (!play) return undefined;
+    let i = BIZ_ORDER.indexOf(sel);
+    const t = setInterval(() => { i = (i + 1) % BIZ_ORDER.length; setSel(BIZ_ORDER[i]); }, 4500);
+    return () => clearInterval(t);
+  }, [play]);
+  const step = BIZ_ORDER.indexOf(sel);
+  const nodes = useMemo(() => Object.entries(BIZ).map(([k, b]) => ({
+    id: k, type: "biz", position: { x: b.x - 90, y: b.y - 40 },
+    data: { ...b, sel: sel === k, dim: play && BIZ_ORDER.indexOf(k) > step },
+  })), [sel, play]);
+  const edges = useMemo(() => BIZ_EDGES.map(([s, ss, t, ts, label, dash], i) => {
+    const hot = t === sel;
+    return {
+      id: "b" + i, source: s, sourceHandle: "s-" + ss, target: t, targetHandle: "t-" + ts, type: "flow", label,
+      data: { hot, dim: play && BIZ_ORDER.indexOf(t) > step, dash, delay: (i % 5) * 0.35 + "s" },
+      markerEnd: { type: RF.MarkerType.ArrowClosed, width: 16, height: 16, color: hot ? (dark ? "#4aa3ff" : "#0078d4") : (dark ? "#6d7d90" : "#8a99ab") },
+    };
+  }), [sel, play, dark]);
+  const b = BIZ[sel];
+  return html`<div>
+    <${Head} title="Business overview: from behaviour to decisions"
+      lead="What we compute at each stage, how, why this way, and what it means for the business. Follow one real client (7926, scored live by the endpoint) through the whole chain." />
+    <div class="row" style=${{ marginBottom: "12px" }}>
+      <button class=${"iconbtn" + (play ? " on" : "")} onClick=${() => setPlay(!play)}>${play ? "❚❚ Pause" : "▶ Play the story"}</button>
+      <button class="iconbtn" onClick=${() => { setPlay(false); setSel(BIZ_ORDER[Math.max(0, step - 1)]); }}>← Previous</button>
+      <button class="iconbtn" onClick=${() => { setPlay(false); setSel(BIZ_ORDER[Math.min(BIZ_ORDER.length - 1, step + 1)]); }}>Next →</button>
+      <span class="muted small">Stage ${step + 1} of ${BIZ_ORDER.length} · click any stage</span>
+    </div>
+    <div class="arch-layout">
+      <div class="card rf-wrap biz-wrap">
+        <${RF.ReactFlow} nodes=${nodes} edges=${edges} nodeTypes=${BIZ_NODE_TYPES} edgeTypes=${EDGE_TYPES}
+          colorMode=${dark ? "dark" : "light"} fitView fitViewOptions=${{ padding: 0.06 }} minZoom=${0.2} maxZoom=${2.5}
+          nodesDraggable=${false} nodesConnectable=${false} elementsSelectable=${false}
+          zoomOnScroll=${false} zoomOnDoubleClick=${false} preventScrolling=${false}
+          onNodeClick=${(e, n) => { setPlay(false); setSel(n.id); }}>
+          <${RF.Controls} showInteractive=${false} position="bottom-right" />
+        </${RF.ReactFlow}>
+      </div>
+      <aside class="card side-panel">
+        <div class="side-head"><span class="n">${b.n}</span><div><div class="muted small">${b.q}</div><h3>${b.t}</h3></div></div>
+        <div class="formula">${b.formula}</div>
+        <div class="side-label">How we compute it</div>
+        <ul class="clean small">${b.how.map((h) => html`<li key=${h}>${h}</li>`)}</ul>
+        <div class="side-label">Why this way</div><p class="small" style=${{ margin: 0 }}>${b.why}</p>
+        <div class="side-label">What it means for the business</div><p class="small" style=${{ margin: 0 }}>${b.meaning}</p>
+        <div class="callout small section"><b>Client 7926:</b> ${b.ex}</div>
+      </aside>
+    </div>
+  </div>`;
+}
 
 function Architecture({ dark }) {
   const [flow, setFlow] = useState("all");
@@ -2712,16 +2931,29 @@ function Architecture({ dark }) {
       <button class=${"iconbtn" + (play ? " on" : "")} onClick=${() => setPlay(!play)}>${play ? "❚❚ Pause tour" : "▶ Play tour"}</button>
       <span class="muted small">Click any component for details · drag to pan</span>
     </div>
-    <div class="card rf-wrap">
-      <${RF.ReactFlow} nodes=${nodes} edges=${edges} nodeTypes=${NODE_TYPES} edgeTypes=${EDGE_TYPES}
-        colorMode=${dark ? "dark" : "light"} fitView fitViewOptions=${{ padding: 0.02 }} minZoom=${0.2} maxZoom=${2.5}
-        nodesDraggable=${false} nodesConnectable=${false} elementsSelectable=${false}
-        zoomOnScroll=${false} zoomOnDoubleClick=${false} preventScrolling=${false}
-        onNodeClick=${(e, n) => n.type !== "zone" && setSel(n.id)}>
-        <${RF.Controls} showInteractive=${false} position="bottom-right" />
-      </${RF.ReactFlow}>
+    <div class="arch-layout">
+      <div class="card rf-wrap">
+        <${RF.ReactFlow} nodes=${nodes} edges=${edges} nodeTypes=${NODE_TYPES} edgeTypes=${EDGE_TYPES}
+          colorMode=${dark ? "dark" : "light"} fitView fitViewOptions=${{ padding: 0.02 }} minZoom=${0.2} maxZoom=${2.5}
+          nodesDraggable=${false} nodesConnectable=${false} elementsSelectable=${false}
+          zoomOnScroll=${false} zoomOnDoubleClick=${false} preventScrolling=${false}
+          onNodeClick=${(e, n) => n.type !== "zone" && setSel(n.id)}>
+          <${RF.Controls} showInteractive=${false} position="bottom-right" />
+        </${RF.ReactFlow}>
+      </div>
+      <aside class="card side-panel">
+        <div class="side-head">
+          ${NODES[sel].icon ? html`<img src=${I(NODES[sel].icon)} alt="" />` : html`<span class="n">${NODES[sel].step}</span>`}
+          <div><div class="muted small">Selected component</div><h3>${title}</h3></div>
+        </div>
+        <p class="small">${body}</p>
+        <div class="callout small">${NODE_INFO[sel][1]}</div>
+        <div class="side-label">In the repo</div>
+        <div class="file-list">${NODE_INFO[sel][0].map((f) => html`<code key=${f}>${f}</code>`)}</div>
+        <div class="side-label">Part of</div>
+        <div class="row">${FLOWS.slice(1).filter(([f]) => FLOW_NODES[f].has(sel)).map(([f, l]) => html`<button key=${f} class="pill accent pill-btn" onClick=${() => { setPlay(false); setFlow(f); }}>${l}</button>`)}</div>
+      </aside>
     </div>
-    <div class="card detail section"><h3>${title}</h3><div>${body}</div></div>
   </div>`;
 }
 
@@ -2829,6 +3061,7 @@ const GRADES = [
 
 function Model() {
   return html`<div>
+    <div style=${{ float: "right" }}><${LinkBtn} primary href=${STUDIO.model(3)}>Open registered model in Azure ML</${LinkBtn}></div>
     <${Head} title="Model & validation"
       lead="Held-out test set (5,993 clients). The question is not only 'does it rank' but 'are the PDs right per grade, is it fair, can we explain each decision'." />
     <div class="grid g6">
@@ -3018,7 +3251,7 @@ function Cockpit() {
       lead="Streamlit app on Azure Container Apps (scales to zero), driven by the registered model package or the endpoint. One screen per question a credit-risk team asks." />
     <div class="row" style=${{ marginBottom: "12px" }}>
       <a class="iconbtn on" href="http://localhost:8501" target="_blank" rel="noopener" style=${{ textDecoration: "none", padding: "6px 14px", fontSize: "13px" }}>Open live cockpit ↗</a>
-      <span class="small muted">local: <code>make app</code> (registered model v2 in <code>app/model</code>)</span>
+      <span class="small muted">start it first with <code>make app</code> (runs on your laptop, registered model v2 in <code>app/model</code>)</span>
     </div>
     <div class="card"><${Gallery} items=${[
       ["app_portfolio", "Portfolio", "Portfolio view: exposure, expected loss, grade mix, segments."],
@@ -3089,16 +3322,26 @@ const RUNS = [
   ["Training pipeline", "cool_rhythm_hx51hfjj1r", "Completed", "preprocess (incl. one-time image build) 16 min · train 3 min · evaluate 1.5 min · register 1 min"],
   ["Batch monitoring (downturn)", "ivory_rabbit_9x86flykq4", "Completed", "score 1 min · monitor + insights in parallel 1.5 min · [DRIFT ALERT]"],
   ["Training via GitHub Actions (OIDC)", "brave_ocean_w3b8k8s0dq", "Completed", "triggered by train-and-deploy · gate compared v2 with champion v1 · registered v2"],
+  ["Training after the engineering clean-up", "eager_cord_w2yj7rnz4n", "Completed", "uv-locked environment · cluster on D2ds_v5 · gate compared v3 with v2 · registered v3 (git 600cc5b)"],
 ];
 
 function Live() {
   return html`<div>
     <${Head} title="Live on Azure"
       lead="What I have running in my Azure subscription, the evidence for the deliverable, and what it costs." />
+    <div class="row" style=${{ marginBottom: "14px" }}>
+      <${LinkBtn} primary href=${STUDIO.model(3)}>Registered model (latest, v3)</${LinkBtn}>
+      <${LinkBtn} href=${STUDIO.model(2)}>Model v2 (on the endpoint)</${LinkBtn}>
+      <${LinkBtn} href=${STUDIO.endpoint}>Online endpoint</${LinkBtn}>
+      <${LinkBtn} href=${studio("eager_cord_w2yj7rnz4n")}>Latest training run</${LinkBtn}>
+      <${LinkBtn} href=${STUDIO.data}>Data asset</${LinkBtn}>
+      <${LinkBtn} href="https://github.com/akhileshwarsharma95/credit-default-azureml/actions">GitHub Actions</${LinkBtn}>
+      <${LinkBtn} href="http://localhost:8501">Cockpit (needs make app)</${LinkBtn}>
+    </div>
     <div class="grid g4">
       <div class="card"><${Svc} icon="az/machine-learning" name="mlw-credit-risk">Azure ML workspace · Germany West Central</${Svc}></div>
       <div class="card"><${Svc} icon="az/vm" name="cpu-cluster">Standard_D2ds_v5 · 0–2 nodes · idle = 0 nodes</${Svc}></div>
-      <div class="card"><${Svc} icon="az/machine-learning" name="credit-default-model v1, v2">test AUC 0.7785 · Gini 0.557 · ECE 0.0105 · v2 from CI</${Svc}></div>
+      <div class="card"><${Svc} icon="az/machine-learning" name="credit-default-model v1–v3">test AUC 0.7785 · Gini 0.557 · ECE 0.0105 · v2, v3 from CI</${Svc}></div>
       <div class="card"><${Svc} icon="az/storage" name="Data assets">credit-default-raw:1 · credit-default-batch-portfolio-downturn:1</${Svc}></div>
     </div>
     <div class="card section"><${Svc} icon="az/machine-learning" name="Online endpoint credit-risk-fb1504">
@@ -3182,6 +3425,96 @@ function Dkv() {
           <li>Shadow mode in batch, weekly drift monitoring</li><li>Model card + validation pack for sign-off</li><li>Plan the real-time onboarding endpoint and one React front end</li></ul></div>
       </div>
     </div>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ project structure */
+// [folder, purpose, [[file, what, why, connects], ...]]
+const STRUCTURE = [
+  ["src/creditrisk/", "The library: all logic, tested once, used everywhere", [
+    ["config.yaml", "Business and technical parameters", "One place for costs, LGD/CCF, PD floor, master scale, gate, thresholds, Azure settings", "read by every step, the app and the submitters; ships inside the package"],
+    ["quality.py", "pandera hard and soft checks, cleaning, quality report", "Bad data must stop the run; undocumented codes are cleaned and reported", "preprocess, score_batch, make_batches"],
+    ["features.py", "13 engineered features, monotonic directions", "Behaviour summarised into risk signals inside the model pipeline (no skew)", "modeling (part of the saved model)"],
+    ["modeling.py", "LightGBM and scorecard builders, Optuna, OOF, isotonic calibration, PD floor", "Model choice by evidence, calibrated probabilities", "train, evaluate"],
+    ["metrics.py", "AUC/Gini/KS + CIs, calibration, Jeffreys backtest, fairness, cost curve", "Validation as for a credit model", "train, evaluate, monitor_drift"],
+    ["explain.py", "TreeSHAP contributions and reason codes", "Every PD comes with its reasons", "evaluate, scoring"],
+    ["policy.py", "Master scale, cut-off, EAD, IFRS 9 stage, EWS, limits, actions, TTC shift, pricing", "Turns a PD into decisions", "scoring, insights, analytics"],
+    ["scoring.py", "score_frame: PD → grade → action, reasons, EAD, EL, stage, EWS, limit advice", "One scoring path for batch, endpoint and app", "score_batch, serving/score.py, app, evaluate"],
+    ["drift.py", "Reference profile, PSI, downturn simulation", "Monitoring against the baseline stored with each model", "train, monitor_drift, make_batches, app"],
+    ["migration.py", "Markov lifetime PD (cohort method)", "IFRS 9 lifetime PD vectors per delinquency bucket", "insights"],
+    ["portfolio_risk.py", "Vasicek loss distribution, credit VaR, concentration", "Total risk: expected vs unexpected loss", "insights, pricing"],
+    ["insights.py + sql/", "Segments, SQL tables, roll rates, default forecast, KPIs", "Power BI-ready portfolio view", "portfolio_insights step, app, analytics"],
+    ["agent.py", "LLM agent with a SELECT-only SQL tool", "Ask the portfolio in plain language, safely", "app"],
+    ["feature_report.py · model_card.py · plots.py · tracking.py · observability.py · schema.py · config.py", "Feature analysis, model card, charts, MLflow helpers, logging/telemetry, column definitions, config loader", "Shared building blocks", "steps, scripts, app"],
+  ]],
+  ["src/", "Pipeline steps: one script = one Azure ML component", [
+    ["preprocess.py", "Step 1: validate, clean, split", "Clean data before anything is fitted", "components/preprocess.yml → train"],
+    ["train.py", "Step 2: tune, select, calibrate, package", "One self-contained MLflow model", "components/train.yml → evaluate, register"],
+    ["evaluate.py", "Step 3: metrics, backtest, SHAP, gate decision", "Evidence + champion comparison on the same test set", "components/evaluate.yml → register"],
+    ["register.py", "Step 4: register if the gate passed, with model card", "Only better models reach the registry", "Azure ML model registry"],
+    ["score_batch.py · monitor_drift.py · portfolio_insights.py", "Batch pipeline: score → PSI → insights", "Weekly portfolio view and drift alert", "components/*.yml, pipeline/batch_pipeline.yml"],
+    ["serving/score.py", "Online endpoint: init() + run()", "Real-time PD with reason codes; 400 on bad input", "deploy/deploy_endpoint.py"],
+  ]],
+  ["components/", "7 YAML step definitions: inputs, outputs, environment, command", [
+    ["*.yml", "preprocess, train, evaluate, register, score_batch, monitor_drift, portfolio_insights", "Single source of truth for SDK and CLI pipelines", "pipeline/run_*.py and pipeline/*.yml; defaults locked to config by tests"],
+  ]],
+  ["pipeline/", "Orchestration on Azure ML", [
+    ["run_pipeline.py", "Builds and submits the training pipeline (SDK v2); --dry-run, --schedule", "The brief's pipeline, plus cluster and data-asset creation", "components/, azure_utils.py"],
+    ["run_batch_pipeline.py", "Registers a batch and submits score → monitor → insights", "Batch scoring and drift demo", "components/, azure_utils.py"],
+    ["azure_utils.py", "Client, cluster, data assets (sha256), model lookup, log streaming", "Shared Azure plumbing", "submitters, deploy, scripts"],
+    ["training_pipeline.yml · batch_pipeline.yml", "The same pipelines for az ml job create", "The brief's YAML + CLI option", "components/"],
+  ]],
+  ["deploy/ · monitoring/ · infra/", "Serving, model monitor, Azure setup", [
+    ["deploy/deploy_endpoint.py", "Blue/green release, smoke test, canary, rollback, delete", "Safe real-time releases", "serving/score.py, model registry"],
+    ["monitoring/setup_model_monitor.py", "Azure ML model monitor on the endpoint", "Drift on what the endpoint receives", "online endpoint data collector"],
+    ["infra/setup_azure.sh · alerts.sh", "Providers, resource group, workspace, OIDC, GitHub secrets · alerts", "Reproducible setup, no stored secrets", "GitHub Actions, Azure Monitor"],
+  ]],
+  ["scripts/ · app/", "Local tools and the cockpit", [
+    ["scripts/run_local.py", "Every step locally, SQLite MLflow registry", "Same pipeline without Azure (make local)", "src/*.py"],
+    ["scripts/risk_analytics.py", "Feature report + portfolio analytics → docs/analytics", "The numbers on this deck (make analytics)", "feature_report, insights, policy"],
+    ["scripts/download_data.py · make_batches.py · fetch_model.py · lock_env.py", "UCI data, demo batches, registered model download, Azure environment locks", "One-command chores", "data/, app/model, environments/"],
+    ["app/streamlit_app.py", "Cockpit: portfolio, client profile + what-if, limits, monitoring, agent, model card", "The credit officer's tool", "scoring, insights, agent, app/model"],
+  ]],
+  ["tests/ · .github/ · environments/ · root", "Quality, CI/CD, reproducibility", [
+    ["tests/", "53 tests: units, end to end on synthetic data, spec dry-runs, config consistency", "Every requirement has a test", "make check, ci workflow"],
+    [".github/workflows/", "ci, train-and-deploy, batch-monitoring, deploy-app", "Checks on every push; training and deployment from GitHub via OIDC", "Azure ML, Entra ID"],
+    ["environments/", "Pinned conda environments for jobs and the endpoint", "Azure runs exactly the tested versions", "components/, deploy_endpoint.py, make lock"],
+    ["pyproject.toml · uv.lock · Makefile · Dockerfile", "Dependencies, lock, commands, app container", "Reproducible installs and one command per task", "uv, ruff, pytest, make"],
+    ["docs/SPEC.md", "The specification: requirements → code → test", "Spec-driven development", "everything above"],
+  ]],
+];
+
+function ProjectStructure() {
+  const [open, setOpen] = useState(0);
+  const [file, setFile] = useState([0, 0]);
+  const [fi, fj] = file;
+  const [, , files] = STRUCTURE[fi];
+  const [name, what, why, connects] = files[fj];
+  return html`<div>
+    <${Head} title="Project structure"
+      lead="One library, many entry points: the same creditrisk code runs in every pipeline step, the endpoint, the cockpit and the tests. Click a folder, then a file." />
+    <div class="arch-layout">
+      <div class="card tree">${STRUCTURE.map(([folder, purpose, items], i) => html`<div key=${folder} class="tree-folder">
+        <button class=${"tree-head" + (open === i ? " on" : "")} onClick=${() => { setOpen(open === i ? -1 : i); setFile([i, 0]); }}>
+          <span class="caret">${open === i ? "▾" : "▸"}</span><code>${folder}</code><span class="muted small">${purpose}</span></button>
+        ${open === i && html`<div class="tree-files">${items.map(([n, w], j) => html`<button key=${n}
+          class=${"tree-file" + (fi === i && fj === j ? " on" : "")} onClick=${() => setFile([i, j])}><code>${n}</code><span class="muted small">${w}</span></button>`)}</div>`}
+      </div>`)}</div>
+      <aside class="card side-panel">
+        <div class="muted small">${STRUCTURE[fi][0]}</div>
+        <h3 style=${{ marginTop: "4px" }}><code>${name}</code></h3>
+        <div class="side-label">What it does</div><p class="small" style=${{ margin: 0 }}>${what}</p>
+        <div class="side-label">Why it exists</div><p class="small" style=${{ margin: 0 }}>${why}</p>
+        <div class="side-label">Connects to</div><p class="small" style=${{ margin: 0 }}>${connects}</p>
+      </aside>
+    </div>
+    <div class="card section"><h3>One prediction, through the code</h3>
+      <div class="flow">
+        <div class="stage"><h3><span class="n">1</span>Data</h3><div class="small muted">schema.load_raw → quality.validate / clean → stratified split</div></div>
+        <div class="stage"><h3><span class="n">2</span>Model</h3><div class="small muted">FeatureEngineer + LightGBM → isotonic → PD floor → MLflow package</div></div>
+        <div class="stage"><h3><span class="n">3</span>Evidence</h3><div class="small muted">metrics, backtest, SHAP → gate → registry + model card</div></div>
+        <div class="stage"><h3><span class="n">4</span>Decision</h3><div class="small muted">scoring.score_frame → grade, EL, stage, EWS, action, limit, reason codes</div></div>
+      </div></div>
   </div>`;
 }
 
@@ -3338,7 +3671,9 @@ function Roadmap() {
 
 const TABS = [
   ["overview", "Overview", Overview],
+  ["business", "Business overview", BusinessOverview],
   ["architecture", "Architecture", Architecture],
+  ["structure", "Project structure", ProjectStructure],
   ["data", "Data", DataTab],
   ["training", "Training pipeline", Training],
   ["model", "Model & validation", Model],
