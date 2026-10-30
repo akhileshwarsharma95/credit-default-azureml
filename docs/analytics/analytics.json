@@ -1,0 +1,1378 @@
+{
+ "features": [
+  {
+   "feature": "n_delays",
+   "iv": 0.8622266891235748,
+   "strength": "very strong",
+   "trend": "increasing",
+   "min_bin_default_rate": 0.11713023395923286,
+   "max_bin_default_rate": 0.7029850746268657,
+   "zero_share": 0.6647088269647923,
+   "description": "Months with a late payment (last 6)"
+  },
+  {
+   "feature": "PAY_1",
+   "iv": 0.8353999693474133,
+   "strength": "very strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.12349799732977303,
+   "max_bin_default_rate": 0.6983650316983651,
+   "zero_share": 0.4918071082930085,
+   "description": "Repayment status in Sep"
+  },
+  {
+   "feature": "n_delays_recent3",
+   "iv": 0.823398574616226,
+   "strength": "very strong",
+   "trend": "increasing",
+   "min_bin_default_rate": 0.12526105722374345,
+   "max_bin_default_rate": 0.6377923976608187,
+   "zero_share": 0.7190722509594527,
+   "description": "Months with a late payment (last 3)"
+  },
+  {
+   "feature": "months_since_delay",
+   "iv": 0.7971896274526218,
+   "strength": "very strong",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.11713023395923286,
+   "max_bin_default_rate": 0.503825779870512,
+   "zero_share": 0.0,
+   "description": "Months since most recent late payment"
+  },
+  {
+   "feature": "max_delay",
+   "iv": 0.7784129249095099,
+   "strength": "very strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.11713023395923286,
+   "max_bin_default_rate": 0.835820895522388,
+   "zero_share": 0.6647088269647923,
+   "description": "Longest payment delay (months)"
+  },
+  {
+   "feature": "PAY_2",
+   "iv": 0.4701498916378314,
+   "strength": "strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.1384718051384718,
+   "max_bin_default_rate": 0.574240907574241,
+   "zero_share": 0.5249457700650759,
+   "description": "Repayment status in Aug"
+  },
+  {
+   "feature": "delay_trend",
+   "iv": 0.36415005930320166,
+   "strength": "strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.14419225634178906,
+   "max_bin_default_rate": 0.5095095095095095,
+   "zero_share": 0.7694643751042883,
+   "description": "Delinquency trend (latest vs. 3 months earlier)"
+  },
+  {
+   "feature": "PAY_3",
+   "iv": 0.3490781992646579,
+   "strength": "strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.15548882215548882,
+   "max_bin_default_rate": 0.5318651985318652,
+   "zero_share": 0.5260804271650259,
+   "description": "Repayment status in Jul"
+  },
+  {
+   "feature": "PAY_5",
+   "iv": 0.3404884617850152,
+   "strength": "strong",
+   "trend": "increasing",
+   "min_bin_default_rate": 0.16205962059620596,
+   "max_bin_default_rate": 1.0,
+   "zero_share": 0.5655598197897547,
+   "description": "Repayment status in May"
+  },
+  {
+   "feature": "PAY_4",
+   "iv": 0.31514669689590213,
+   "strength": "strong",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.16049382716049382,
+   "max_bin_default_rate": 0.5408742075408742,
+   "zero_share": 0.5491406641081261,
+   "description": "Repayment status in Jun"
+  },
+  {
+   "feature": "PAY_6",
+   "iv": 0.294113774151902,
+   "strength": "medium",
+   "trend": "increasing",
+   "min_bin_default_rate": 0.16997907949790794,
+   "max_bin_default_rate": 1.0,
+   "zero_share": 0.543500750876022,
+   "description": "Repayment status in Apr"
+  },
+  {
+   "feature": "pay_ratio_1",
+   "iv": 0.1853726567774213,
+   "strength": "medium",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.10944277610944278,
+   "max_bin_default_rate": 0.3540206873540207,
+   "zero_share": 0.17413649257467045,
+   "description": "Latest repayment as share of previous bill"
+  },
+  {
+   "feature": "pay_ratio_avg",
+   "iv": 0.18527392180524577,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.12145478812145478,
+   "max_bin_default_rate": 0.39873206539873207,
+   "zero_share": 0.05156015351243117,
+   "description": "Average repayment ratio (paid / billed)"
+  },
+  {
+   "feature": "LIMIT_BAL",
+   "iv": 0.17034119154901595,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.1254587921254588,
+   "max_bin_default_rate": 0.35935935935935936,
+   "zero_share": 0.0,
+   "description": "Credit limit"
+  },
+  {
+   "feature": "PAY_AMT1",
+   "iv": 0.16212955509073274,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.12779446112779447,
+   "max_bin_default_rate": 0.3540206873540207,
+   "zero_share": 0.17413649257467045,
+   "description": "Amount paid in Sep"
+  },
+  {
+   "feature": "PAY_AMT2",
+   "iv": 0.14687523492898094,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.11144477811144478,
+   "max_bin_default_rate": 0.3319986653319987,
+   "zero_share": 0.17904221591857167,
+   "description": "Amount paid in Aug"
+  },
+  {
+   "feature": "util_avg",
+   "iv": 0.1302618717200748,
+   "strength": "medium",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.14018691588785046,
+   "max_bin_default_rate": 0.3253253253253253,
+   "zero_share": 0.028032704822292673,
+   "description": "Average 6-month utilisation"
+  },
+  {
+   "feature": "PAY_AMT3",
+   "iv": 0.12312210348036984,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.12579245912579246,
+   "max_bin_default_rate": 0.3247663551401869,
+   "zero_share": 0.19813115301184717,
+   "description": "Amount paid in Jul"
+  },
+  {
+   "feature": "PAY_AMT4",
+   "iv": 0.10523674742162435,
+   "strength": "medium",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.13513513513513514,
+   "max_bin_default_rate": 0.31542056074766356,
+   "zero_share": 0.21281495077590523,
+   "description": "Amount paid in Jun"
+  },
+  {
+   "feature": "util_max",
+   "iv": 0.09896505193830353,
+   "strength": "weak",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.14152202937249667,
+   "max_bin_default_rate": 0.30930930930930933,
+   "zero_share": 0.028299682963457366,
+   "description": "Peak 6-month utilisation"
+  },
+  {
+   "feature": "PAY_AMT6",
+   "iv": 0.09195781928775604,
+   "strength": "weak",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.1254587921254588,
+   "max_bin_default_rate": 0.29072096128170893,
+   "zero_share": 0.23834473552477892,
+   "description": "Amount paid in Apr"
+  },
+  {
+   "feature": "PAY_AMT5",
+   "iv": 0.0858314928996887,
+   "strength": "weak",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.12746079412746078,
+   "max_bin_default_rate": 0.2993991989319092,
+   "zero_share": 0.22265976973135324,
+   "description": "Amount paid in May"
+  },
+  {
+   "feature": "bill_trend",
+   "iv": 0.0779257290493741,
+   "strength": "weak",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.15949282615949284,
+   "max_bin_default_rate": 0.32242990654205606,
+   "zero_share": 0.05963624228266311,
+   "description": "Balance growth over 6 months (share of limit)"
+  },
+  {
+   "feature": "util_1",
+   "iv": 0.07696165393351656,
+   "strength": "weak",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.14786381842456608,
+   "max_bin_default_rate": 0.2862862862862863,
+   "zero_share": 0.06601034540297013,
+   "description": "Credit utilisation (latest bill / limit)"
+  },
+  {
+   "feature": "n_paid_full",
+   "iv": 0.051855289595776184,
+   "strength": "weak",
+   "trend": "decreasing",
+   "min_bin_default_rate": 0.14285714285714285,
+   "max_bin_default_rate": 0.2478597842054607,
+   "zero_share": 0.6588019355915234,
+   "description": "Months paid in full"
+  },
+  {
+   "feature": "EDUCATION",
+   "iv": 0.03709397192777354,
+   "strength": "weak",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.07051282051282051,
+   "max_bin_default_rate": 0.25167853509664295,
+   "zero_share": 0.0,
+   "description": "Education level"
+  },
+  {
+   "feature": "n_no_consumption",
+   "iv": 0.03707214130020308,
+   "strength": "weak",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.13476190476190475,
+   "max_bin_default_rate": 0.34401114206128136,
+   "zero_share": 0.7820457200066745,
+   "description": "Months without card usage"
+  },
+  {
+   "feature": "AGE",
+   "iv": 0.019429458326867308,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.1909212283044059,
+   "max_bin_default_rate": 0.27127127127127126,
+   "zero_share": 0.0,
+   "description": "Age"
+  },
+  {
+   "feature": "BILL_AMT6",
+   "iv": 0.019244180240314507,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.17156208277703605,
+   "max_bin_default_rate": 0.2596795727636849,
+   "zero_share": 0.1331553479058902,
+   "description": "Bill amount in Apr"
+  },
+  {
+   "feature": "BILL_AMT5",
+   "iv": 0.014241942072330706,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.18925233644859812,
+   "max_bin_default_rate": 0.2513351134846462,
+   "zero_share": 0.11600200233605873,
+   "description": "Bill amount in May"
+  },
+  {
+   "feature": "BILL_AMT1",
+   "iv": 0.011661134817383553,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.1965954606141522,
+   "max_bin_default_rate": 0.2539205872539206,
+   "zero_share": 0.06601034540297013,
+   "description": "Bill amount in Sep"
+  },
+  {
+   "feature": "BILL_AMT4",
+   "iv": 0.01124798658997762,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.19519519519519518,
+   "max_bin_default_rate": 0.2466622162883845,
+   "zero_share": 0.10562322709828133,
+   "description": "Bill amount in Jun"
+  },
+  {
+   "feature": "BILL_AMT2",
+   "iv": 0.011029252870337696,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.19959946595460615,
+   "max_bin_default_rate": 0.25625625625625625,
+   "zero_share": 0.08262973469047222,
+   "description": "Bill amount in Aug"
+  },
+  {
+   "feature": "BILL_AMT3",
+   "iv": 0.010567012200273609,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.19853186519853186,
+   "max_bin_default_rate": 0.2509175842509176,
+   "zero_share": 0.09477724011346571,
+   "description": "Bill amount in Jul"
+  },
+  {
+   "feature": "SEX",
+   "iv": 0.009080418805812356,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.20789342767121774,
+   "max_bin_default_rate": 0.2416203469765875,
+   "zero_share": 0.0,
+   "description": "Sex"
+  },
+  {
+   "feature": "MARRIAGE",
+   "iv": 0.005323550438451009,
+   "strength": "not predictive",
+   "trend": "non-monotonic",
+   "min_bin_default_rate": 0.2094700533082471,
+   "max_bin_default_rate": 0.23607427055702918,
+   "zero_share": 0.0,
+   "description": "Marital status"
+  }
+ ],
+ "feature_bins": {
+  "n_delays": [
+   {
+    "bin": 0,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 19918,
+    "defaults": 2333,
+    "default_rate": 0.11713023395923286
+   },
+   {
+    "bin": 1,
+    "x_min": 1,
+    "x_max": 1,
+    "clients": 4405,
+    "defaults": 1316,
+    "default_rate": 0.2987514188422247
+   },
+   {
+    "bin": 2,
+    "x_min": 2,
+    "x_max": 2,
+    "clients": 1899,
+    "defaults": 736,
+    "default_rate": 0.3875724065297525
+   },
+   {
+    "bin": 3,
+    "x_min": 3,
+    "x_max": 3,
+    "clients": 1154,
+    "defaults": 587,
+    "default_rate": 0.5086655112651647
+   },
+   {
+    "bin": 4,
+    "x_min": 4,
+    "x_max": 4,
+    "clients": 951,
+    "defaults": 545,
+    "default_rate": 0.573080967402734
+   },
+   {
+    "bin": 5,
+    "x_min": 5,
+    "x_max": 5,
+    "clients": 298,
+    "defaults": 171,
+    "default_rate": 0.5738255033557047
+   },
+   {
+    "bin": 6,
+    "x_min": 6,
+    "x_max": 6,
+    "clients": 1340,
+    "defaults": 942,
+    "default_rate": 0.7029850746268657
+   }
+  ],
+  "PAY_1": [
+   {
+    "bin": 0,
+    "x_min": -2,
+    "x_max": -1,
+    "clients": 2997,
+    "defaults": 402,
+    "default_rate": 0.13413413413413414
+   },
+   {
+    "bin": 1,
+    "x_min": -1,
+    "x_max": -1,
+    "clients": 2996,
+    "defaults": 568,
+    "default_rate": 0.18958611481975968
+   },
+   {
+    "bin": 2,
+    "x_min": -1,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 422,
+    "default_rate": 0.14080747414080746
+   },
+   {
+    "bin": 3,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 390,
+    "default_rate": 0.130173564753004
+   },
+   {
+    "bin": 4,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 391,
+    "default_rate": 0.1304637971304638
+   },
+   {
+    "bin": 5,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 382,
+    "default_rate": 0.12750333778371162
+   },
+   {
+    "bin": 6,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 370,
+    "default_rate": 0.12349799732977303
+   },
+   {
+    "bin": 7,
+    "x_min": 0,
+    "x_max": 1,
+    "clients": 2997,
+    "defaults": 564,
+    "default_rate": 0.1881881881881882
+   },
+   {
+    "bin": 8,
+    "x_min": 1,
+    "x_max": 2,
+    "clients": 2996,
+    "defaults": 1048,
+    "default_rate": 0.34979973297730305
+   },
+   {
+    "bin": 9,
+    "x_min": 2,
+    "x_max": 8,
+    "clients": 2997,
+    "defaults": 2093,
+    "default_rate": 0.6983650316983651
+   }
+  ],
+  "n_delays_recent3": [
+   {
+    "bin": 0,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 21547,
+    "defaults": 2699,
+    "default_rate": 0.12526105722374345
+   },
+   {
+    "bin": 1,
+    "x_min": 1,
+    "x_max": 1,
+    "clients": 4127,
+    "defaults": 1507,
+    "default_rate": 0.3651562878604313
+   },
+   {
+    "bin": 2,
+    "x_min": 2,
+    "x_max": 2,
+    "clients": 1555,
+    "defaults": 679,
+    "default_rate": 0.4366559485530547
+   },
+   {
+    "bin": 3,
+    "x_min": 3,
+    "x_max": 3,
+    "clients": 2736,
+    "defaults": 1745,
+    "default_rate": 0.6377923976608187
+   }
+  ],
+  "months_since_delay": [
+   {
+    "bin": 1,
+    "x_min": 1,
+    "x_max": 1,
+    "clients": 6796,
+    "defaults": 3424,
+    "default_rate": 0.503825779870512
+   },
+   {
+    "bin": 2,
+    "x_min": 2,
+    "x_max": 2,
+    "clients": 447,
+    "defaults": 170,
+    "default_rate": 0.38031319910514544
+   },
+   {
+    "bin": 3,
+    "x_min": 3,
+    "x_max": 3,
+    "clients": 1175,
+    "defaults": 337,
+    "default_rate": 0.2868085106382979
+   },
+   {
+    "bin": 4,
+    "x_min": 4,
+    "x_max": 4,
+    "clients": 709,
+    "defaults": 183,
+    "default_rate": 0.25811001410437234
+   },
+   {
+    "bin": 5,
+    "x_min": 5,
+    "x_max": 5,
+    "clients": 406,
+    "defaults": 87,
+    "default_rate": 0.21428571428571427
+   },
+   {
+    "bin": 6,
+    "x_min": 6,
+    "x_max": 6,
+    "clients": 514,
+    "defaults": 96,
+    "default_rate": 0.1867704280155642
+   },
+   {
+    "bin": 7,
+    "x_min": 7,
+    "x_max": 7,
+    "clients": 19918,
+    "defaults": 2333,
+    "default_rate": 0.11713023395923286
+   }
+  ],
+  "max_delay": [
+   {
+    "bin": 0.0,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 19918,
+    "defaults": 2333,
+    "default_rate": 0.11713023395923286
+   },
+   {
+    "bin": 1.0,
+    "x_min": 1.0,
+    "x_max": 1.0,
+    "clients": 1668,
+    "defaults": 418,
+    "default_rate": 0.25059952038369304
+   },
+   {
+    "bin": 2.0,
+    "x_min": 2.0,
+    "x_max": 2.0,
+    "clients": 7187,
+    "defaults": 3130,
+    "default_rate": 0.43550855711701686
+   },
+   {
+    "bin": 3.0,
+    "x_min": 3.0,
+    "x_max": 3.0,
+    "clients": 789,
+    "defaults": 491,
+    "default_rate": 0.6223067173637515
+   },
+   {
+    "bin": 4.0,
+    "x_min": 4.0,
+    "x_max": 4.0,
+    "clients": 217,
+    "defaults": 139,
+    "default_rate": 0.6405529953917051
+   },
+   {
+    "bin": 5.0,
+    "x_min": 5.0,
+    "x_max": 5.0,
+    "clients": 69,
+    "defaults": 35,
+    "default_rate": 0.5072463768115942
+   },
+   {
+    "bin": 6.0,
+    "x_min": 6.0,
+    "x_max": 6.0,
+    "clients": 25,
+    "defaults": 14,
+    "default_rate": 0.56
+   },
+   {
+    "bin": 7.0,
+    "x_min": 7.0,
+    "x_max": 7.0,
+    "clients": 67,
+    "defaults": 56,
+    "default_rate": 0.835820895522388
+   },
+   {
+    "bin": 8.0,
+    "x_min": 8.0,
+    "x_max": 8.0,
+    "clients": 25,
+    "defaults": 14,
+    "default_rate": 0.56
+   }
+  ],
+  "PAY_2": [
+   {
+    "bin": 0,
+    "x_min": -2,
+    "x_max": -2,
+    "clients": 2997,
+    "defaults": 564,
+    "default_rate": 0.1881881881881882
+   },
+   {
+    "bin": 1,
+    "x_min": -2,
+    "x_max": -1,
+    "clients": 2996,
+    "defaults": 516,
+    "default_rate": 0.17222963951935916
+   },
+   {
+    "bin": 2,
+    "x_min": -1,
+    "x_max": -1,
+    "clients": 2997,
+    "defaults": 449,
+    "default_rate": 0.1498164831498165
+   },
+   {
+    "bin": 3,
+    "x_min": -1,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 477,
+    "default_rate": 0.15921228304405874
+   },
+   {
+    "bin": 4,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 496,
+    "default_rate": 0.16549883216549882
+   },
+   {
+    "bin": 5,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 477,
+    "default_rate": 0.15921228304405874
+   },
+   {
+    "bin": 6,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 502,
+    "default_rate": 0.16755674232309747
+   },
+   {
+    "bin": 7,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 415,
+    "default_rate": 0.1384718051384718
+   },
+   {
+    "bin": 8,
+    "x_min": 0,
+    "x_max": 2,
+    "clients": 2996,
+    "defaults": 1013,
+    "default_rate": 0.33811748998664887
+   },
+   {
+    "bin": 9,
+    "x_min": 2,
+    "x_max": 8,
+    "clients": 2997,
+    "defaults": 1721,
+    "default_rate": 0.574240907574241
+   }
+  ],
+  "delay_trend": [
+   {
+    "bin": 0,
+    "x_min": -7.0,
+    "x_max": 0.0,
+    "clients": 2997,
+    "defaults": 1002,
+    "default_rate": 0.33433433433433435
+   },
+   {
+    "bin": 1,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2996,
+    "defaults": 481,
+    "default_rate": 0.16054739652870495
+   },
+   {
+    "bin": 2,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2997,
+    "defaults": 508,
+    "default_rate": 0.16950283616950285
+   },
+   {
+    "bin": 3,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2996,
+    "defaults": 488,
+    "default_rate": 0.1628838451268358
+   },
+   {
+    "bin": 4,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2997,
+    "defaults": 505,
+    "default_rate": 0.16850183516850184
+   },
+   {
+    "bin": 5,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2996,
+    "defaults": 474,
+    "default_rate": 0.1582109479305741
+   },
+   {
+    "bin": 6,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2996,
+    "defaults": 432,
+    "default_rate": 0.14419225634178906
+   },
+   {
+    "bin": 7,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "clients": 2997,
+    "defaults": 445,
+    "default_rate": 0.14848181514848183
+   },
+   {
+    "bin": 8,
+    "x_min": 0.0,
+    "x_max": 1.0,
+    "clients": 2996,
+    "defaults": 768,
+    "default_rate": 0.25634178905206945
+   },
+   {
+    "bin": 9,
+    "x_min": 1.0,
+    "x_max": 4.0,
+    "clients": 2997,
+    "defaults": 1527,
+    "default_rate": 0.5095095095095095
+   }
+  ],
+  "PAY_3": [
+   {
+    "bin": 0,
+    "x_min": -2,
+    "x_max": -2,
+    "clients": 2997,
+    "defaults": 566,
+    "default_rate": 0.1888555221888555
+   },
+   {
+    "bin": 1,
+    "x_min": -2,
+    "x_max": -1,
+    "clients": 2996,
+    "defaults": 497,
+    "default_rate": 0.1658878504672897
+   },
+   {
+    "bin": 2,
+    "x_min": -1,
+    "x_max": -1,
+    "clients": 2997,
+    "defaults": 476,
+    "default_rate": 0.1588254921588255
+   },
+   {
+    "bin": 3,
+    "x_min": -1,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 482,
+    "default_rate": 0.16088117489986647
+   },
+   {
+    "bin": 4,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 539,
+    "default_rate": 0.1798465131798465
+   },
+   {
+    "bin": 5,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 529,
+    "default_rate": 0.1765687583444593
+   },
+   {
+    "bin": 6,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2996,
+    "defaults": 564,
+    "default_rate": 0.1882510013351135
+   },
+   {
+    "bin": 7,
+    "x_min": 0,
+    "x_max": 0,
+    "clients": 2997,
+    "defaults": 466,
+    "default_rate": 0.15548882215548882
+   },
+   {
+    "bin": 8,
+    "x_min": 0,
+    "x_max": 2,
+    "clients": 2996,
+    "defaults": 917,
+    "default_rate": 0.3060747663551402
+   },
+   {
+    "bin": 9,
+    "x_min": 2,
+    "x_max": 8,
+    "clients": 2997,
+    "defaults": 1594,
+    "default_rate": 0.5318651985318652
+   }
+  ]
+ },
+ "kpis": {
+  "clients": 5993.0,
+  "total_ead": 660461505.5,
+  "total_el": 70629995.27533554,
+  "el_rate": 0.1069403662244711,
+  "total_ecl": 94379302.39529358,
+  "mean_pd": 0.22031732525746972,
+  "intervene_rate": 0.40380443851159686,
+  "watch_rate": 0.34173202069080594,
+  "stage2_ead_share": 0.1836449225124446,
+  "stage3_ead_share": 0.008931591698950274,
+  "ews_multi_trigger_rate": 0.2099115634907392,
+  "observed_dr": 0.22125813449023862,
+  "projected_delinquency_3m": 0.2860269762666363,
+  "current_delinquency": 0.22342733188720174,
+  "unexpected_loss_999": 61641798.8592052,
+  "expected_loss_12m_forecast": 22518472.530023888,
+  "markov_coverage": 0.8801935591523443,
+  "hhi_single_name": 0.000265308287935065,
+  "top10_ead_share": 0.009186708762695632,
+  "top1pct_ead_share": 0.042578253639038166,
+  "largest_group_ead_share": 0.4239365120727691
+ },
+ "lifetime_pd": [
+  {
+   "from_bucket": "0 Current",
+   "month": 1,
+   "cumulative_pd": 0.0,
+   "marginal_pd": 0.0
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 1,
+   "cumulative_pd": 0.06020066889632107,
+   "marginal_pd": 0.06020066889632107
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 2,
+   "cumulative_pd": 0.0028297109723284053,
+   "marginal_pd": 0.0028297109723284053
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 2,
+   "cumulative_pd": 0.0952887449906499,
+   "marginal_pd": 0.03508807609432883
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 3,
+   "cumulative_pd": 0.007137696777283689,
+   "marginal_pd": 0.004307985804955283
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 3,
+   "cumulative_pd": 0.11646087623651173,
+   "marginal_pd": 0.021172131245861828
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 4,
+   "cumulative_pd": 0.012180496490679649,
+   "marginal_pd": 0.00504279971339596
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 4,
+   "cumulative_pd": 0.129898719867667,
+   "marginal_pd": 0.013437843631155258
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 5,
+   "cumulative_pd": 0.017550150544473113,
+   "marginal_pd": 0.005369654053793464
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 5,
+   "cumulative_pd": 0.1390158413029818,
+   "marginal_pd": 0.009117121435314818
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 6,
+   "cumulative_pd": 0.023023809863364764,
+   "marginal_pd": 0.0054736593188916514
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 6,
+   "cumulative_pd": 0.14569790025359824,
+   "marginal_pd": 0.006682058950616437
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 7,
+   "cumulative_pd": 0.028480729127662953,
+   "marginal_pd": 0.0054569192642981885
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 7,
+   "cumulative_pd": 0.1509871776988895,
+   "marginal_pd": 0.005289277445291257
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 8,
+   "cumulative_pd": 0.03385645290795525,
+   "marginal_pd": 0.005375723780292295
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 8,
+   "cumulative_pd": 0.1554604045782161,
+   "marginal_pd": 0.004473226879326608
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 9,
+   "cumulative_pd": 0.03911753049173632,
+   "marginal_pd": 0.005261077583781075
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 9,
+   "cumulative_pd": 0.15943730711867035,
+   "marginal_pd": 0.003976902540454241
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 10,
+   "cumulative_pd": 0.044247561544133396,
+   "marginal_pd": 0.005130031052397073
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 10,
+   "cumulative_pd": 0.16309571550579693,
+   "marginal_pd": 0.0036584083871265827
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 11,
+   "cumulative_pd": 0.049239495810616436,
+   "marginal_pd": 0.0049919342664830404
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 11,
+   "cumulative_pd": 0.16653509978674264,
+   "marginal_pd": 0.003439384280945701
+  },
+  {
+   "from_bucket": "0 Current",
+   "month": 12,
+   "cumulative_pd": 0.054091384707981444,
+   "marginal_pd": 0.004851888897365007
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "month": 12,
+   "cumulative_pd": 0.16981163994541873,
+   "marginal_pd": 0.0032765401586760945
+  }
+ ],
+ "default_forecast": [
+  {
+   "month": 1,
+   "default_rate": 0.005253620863136312,
+   "expected_defaults": 31.484949832775918,
+   "expected_loss": 2081888.6067559307
+  },
+  {
+   "month": 2,
+   "default_rate": 0.005259559262898445,
+   "expected_defaults": 31.52053866255038,
+   "expected_loss": 2084241.8574242261
+  },
+  {
+   "month": 3,
+   "default_rate": 0.005193123740672055,
+   "expected_defaults": 31.122390577847625,
+   "expected_loss": 2057914.994407234
+  },
+  {
+   "month": 4,
+   "default_rate": 0.005088800614923911,
+   "expected_defaults": 30.497182085239,
+   "expected_loss": 2016574.1491931833
+  },
+  {
+   "month": 5,
+   "default_rate": 0.004965563904058807,
+   "expected_defaults": 29.75862447702443,
+   "expected_loss": 1967738.287038682
+  },
+  {
+   "month": 6,
+   "default_rate": 0.004833827348789278,
+   "expected_defaults": 28.96912730129414,
+   "expected_loss": 1915534.1328650638
+  },
+  {
+   "month": 7,
+   "default_rate": 0.0046992815551361745,
+   "expected_defaults": 28.162794359931095,
+   "expected_loss": 1862216.7424041713
+  },
+  {
+   "month": 8,
+   "default_rate": 0.00456501186907528,
+   "expected_defaults": 27.358116131368156,
+   "expected_loss": 1809008.7670048971
+  },
+  {
+   "month": 9,
+   "default_rate": 0.004432667295774185,
+   "expected_defaults": 26.564975103574692,
+   "expected_loss": 1756563.669328579
+  },
+  {
+   "month": 10,
+   "default_rate": 0.004303105640634604,
+   "expected_defaults": 25.788512104323182,
+   "expected_loss": 1705221.3778434435
+  },
+  {
+   "month": 11,
+   "default_rate": 0.004176749550333167,
+   "expected_defaults": 25.031260055146667,
+   "expected_loss": 1655149.3776656946
+  },
+  {
+   "month": 12,
+   "default_rate": 0.004053782985370322,
+   "expected_defaults": 24.29432143132434,
+   "expected_loss": 1606420.5680927804
+  }
+ ],
+ "loss_quantiles": [
+  {
+   "confidence": "expected",
+   "loss": 70629995.27533557,
+   "unexpected_loss": 0.0
+  },
+  {
+   "confidence": "50.0%",
+   "loss": 69297773.57561132,
+   "unexpected_loss": -1332221.699724242
+  },
+  {
+   "confidence": "90.0%",
+   "loss": 92396402.59080741,
+   "unexpected_loss": 21766407.315471843
+  },
+  {
+   "confidence": "99.0%",
+   "loss": 114458205.9209741,
+   "unexpected_loss": 43828210.64563854
+  },
+  {
+   "confidence": "99.9%",
+   "loss": 132271794.13454077,
+   "unexpected_loss": 61641798.8592052
+  }
+ ],
+ "roll_rate_matrix": [
+  {
+   "from_bucket": "0 Current",
+   "0 Current": 0.9395600213138464,
+   "1 30 dpd": 0.013435335312476213,
+   "2 60 dpd": 0.0470046433736774,
+   "3 90+ dpd": 0.0
+  },
+  {
+   "from_bucket": "1 30 dpd",
+   "0 Current": 0.0,
+   "1 30 dpd": 1.0,
+   "2 60 dpd": 0.0,
+   "3 90+ dpd": 0.0
+  },
+  {
+   "from_bucket": "2 60 dpd",
+   "0 Current": 0.25478868957129824,
+   "1 30 dpd": 0.10215871085436302,
+   "2 60 dpd": 0.5828519306780177,
+   "3 90+ dpd": 0.06020066889632107
+  },
+  {
+   "from_bucket": "3 90+ dpd",
+   "0 Current": 0.11392405063291139,
+   "1 30 dpd": 0.07341772151898734,
+   "2 60 dpd": 0.26582278481012656,
+   "3 90+ dpd": 0.5468354430379747
+  }
+ ],
+ "ttc_by_grade": [
+  {
+   "grade": "A",
+   "clients": 305,
+   "pd_pit": 0.02717342150588736,
+   "pd_ttc": 0.02327133736020171,
+   "observed_dr": 0.019672131147540985
+  },
+  {
+   "grade": "B",
+   "clients": 1238,
+   "pd_pit": 0.05823119403039113,
+   "pd_ttc": 0.05007955505532747,
+   "observed_dr": 0.07512116316639741
+  },
+  {
+   "grade": "C",
+   "clients": 798,
+   "pd_pit": 0.10590667900995979,
+   "pd_ttc": 0.09172660567180584,
+   "observed_dr": 0.09649122807017543
+  },
+  {
+   "grade": "D",
+   "clients": 1356,
+   "pd_pit": 0.15397171889500635,
+   "pd_ttc": 0.13434261175123205,
+   "observed_dr": 0.16887905604719763
+  },
+  {
+   "grade": "E",
+   "clients": 1122,
+   "pd_pit": 0.2392738145908994,
+   "pd_ttc": 0.211810832305339,
+   "observed_dr": 0.22994652406417113
+  },
+  {
+   "grade": "F",
+   "clients": 589,
+   "pd_pit": 0.4410224063560317,
+   "pd_ttc": 0.40267864545630444,
+   "observed_dr": 0.42105263157894735
+  },
+  {
+   "grade": "G",
+   "clients": 585,
+   "pd_pit": 0.7153111461757476,
+   "pd_ttc": 0.6825775454111415,
+   "observed_dr": 0.7094017094017094
+  }
+ ],
+ "ttc_target_pd": 0.2,
+ "pricing_by_grade": [
+  {
+   "pd": 0.02717342150588736,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.016304052903532415,
+   "capital_charge_rate": 0.004615293269157909,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.04091934617269032,
+   "grade": "A"
+  },
+  {
+   "pd": 0.05823119403039113,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.03493871641823468,
+   "capital_charge_rate": 0.007736350226249517,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.06267506664448419,
+   "grade": "B"
+  },
+  {
+   "pd": 0.10590667900995979,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.06354400740597586,
+   "capital_charge_rate": 0.011089927624040466,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.09463393503001634,
+   "grade": "C"
+  },
+  {
+   "pd": 0.15397171889500635,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.0923830313370038,
+   "capital_charge_rate": 0.013464871349123442,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.12584790268612725,
+   "grade": "D"
+  },
+  {
+   "pd": 0.2392738145908994,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.14356428875453964,
+   "capital_charge_rate": 0.016120197808609155,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.1796844865631488,
+   "grade": "E"
+  },
+  {
+   "pd": 0.4410224063560317,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.264613443813619,
+   "capital_charge_rate": 0.017505656902425327,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.30211910071604436,
+   "grade": "F"
+  },
+  {
+   "pd": 0.7153111461757476,
+   "funding_rate": 0.01,
+   "expected_loss_rate": 0.4291866877054486,
+   "capital_charge_rate": 0.012372146153957566,
+   "opex_rate": 0.005,
+   "margin_rate": 0.005,
+   "total_rate": 0.46155883385940616,
+   "grade": "G"
+  }
+ ],
+ "actions": {
+  "Intervene": 2420,
+  "Watch": 2048,
+  "Standard": 1525
+ },
+ "escalation": [
+  {
+   "level": "Standard",
+   "trigger": "PD below half the cut-off, < 2 warning triggers",
+   "action": "Normal limits and pricing; limit increase if grade A/B and utilisation > 80%",
+   "owner": "Automated",
+   "review": "Monthly batch"
+  },
+  {
+   "level": "Watch",
+   "trigger": "PD >= half the cut-off or >= 2 warning triggers",
+   "action": "No limit increase; account manager contacts the client; payment terms reviewed",
+   "owner": "Account manager",
+   "review": "Within 10 days"
+  },
+  {
+   "level": "Intervene",
+   "trigger": "PD >= cut-off (cost-optimal, 0.167 by default)",
+   "action": "Undrawn limit reduced; deposit or guarantee requested; collections plan",
+   "owner": "Credit risk",
+   "review": "Within 48 hours"
+  },
+  {
+   "level": "Default",
+   "trigger": "90+ days past due (IFRS 9 stage 3)",
+   "action": "Card blocked; recovery and legal process; full lifetime provision",
+   "owner": "Collections / credit committee",
+   "review": "Immediately"
+  }
+ ],
+ "asset_correlation": 0.04
+}

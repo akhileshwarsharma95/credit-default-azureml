@@ -236,3 +236,9 @@ def test_feature_report_ranks_the_informative_feature_first():
 def test_risk_based_price_rises_with_pd():
     prices = policy.risk_based_price(np.array([0.01, 0.05, 0.20]), lgd=0.6)
     assert np.all(np.diff(prices["total_rate"]) > 0)
+
+
+def test_lifetime_pd_skips_buckets_without_enough_observed_migrations():
+    m = pd.DataFrame([[0.90, 0.08, 0.02], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], index=list("ABD"), columns=list("ABD"))
+    out = migration.lifetime_pd(m, months=3, default_state="D", transitions={"A": 5000, "B": 7, "D": 300})
+    assert set(out["from_bucket"]) == {"A"}

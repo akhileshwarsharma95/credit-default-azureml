@@ -146,11 +146,20 @@ def portfolio_insights(
     # Portfolio view: lifetime PD vectors, monthly default forecast, loss distribution, concentration
     business = load()["business"]
     lgd, rho = business["loss"]["lgd"], business["portfolio"]["asset_correlation"]
-    tables["lifetime_pd"] = migration.lifetime_pd(matrix, months=12)
+    transitions = tables["roll_rates"].groupby("from_bucket")["transitions"].sum().to_dict()
+    tables["lifetime_pd"] = migration.lifetime_pd(matrix, months=12, transitions=transitions)
     tables["default_forecast"] = default_forecast(scored, tables["lifetime_pd"], lgd)
     tables["loss_quantiles"] = portfolio_risk.loss_quantiles(scored["ead"], lgd, scored["pd"], rho)
     kpis["unexpected_loss_999"] = float(tables["loss_quantiles"]["unexpected_loss"].iloc[-1])
     kpis["expected_loss_12m_forecast"] = float(tables["default_forecast"]["expected_loss"].sum())
+    estimable = set(tables["lifetime_pd"]["from_bucket"])
+    kpis["markov_coverage"] = float(
+        sum(
+            s
+            for b, s in zip(BUCKETS, bucket_mix(scored), strict=True)
+            if b in estimable or b == migration.DEFAULT_STATE
+        )
+    )
     kpis |= portfolio_risk.concentration(scored["ead"], scored["segment_name"])
     con.close()
     return kpis, tables

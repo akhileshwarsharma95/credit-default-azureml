@@ -12,9 +12,14 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_STATE = "3 90+ dpd"
+MIN_TRANSITIONS = 100  # fewer observed moves out of a bucket and its row is noise, not a migration rate
 
 
-def lifetime_pd(matrix: pd.DataFrame, months: int = 12, default_state: str = DEFAULT_STATE) -> pd.DataFrame:
+def lifetime_pd(
+    matrix: pd.DataFrame, months: int = 12, default_state: str = DEFAULT_STATE, transitions: dict | None = None
+) -> pd.DataFrame:
+    """Cumulative and marginal PD per starting bucket; buckets below MIN_TRANSITIONS are left out."""
+    estimable = {b for b in matrix.index if transitions is None or transitions.get(b, 0) >= MIN_TRANSITIONS}
     m = matrix.to_numpy(dtype=float).copy()
     d = list(matrix.columns).index(default_state)
     m[d] = np.eye(len(m))[d]  # default is absorbing
@@ -25,7 +30,7 @@ def lifetime_pd(matrix: pd.DataFrame, months: int = 12, default_state: str = DEF
         rows += [
             {"from_bucket": b, "month": month, "cumulative_pd": float(c), "marginal_pd": float(c - p)}
             for b, c, p in zip(matrix.index, cumulative, previous, strict=True)
-            if b != default_state
+            if b != default_state and b in estimable
         ]
         previous = cumulative
     return pd.DataFrame(rows)
