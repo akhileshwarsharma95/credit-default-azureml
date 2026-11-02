@@ -480,7 +480,7 @@ function Training() {
           <tr><td>LightGBM, unconstrained</td><td class="num">0.789</td><td class="num">0.578</td><td class="num">0.133</td></tr>
           <tr><td>Logistic scorecard</td><td class="num">0.771</td><td class="num">0.543</td><td class="num">0.137</td></tr>
         </tbody></table>
-        <p class="small muted" style=${{ marginBottom: 0 }}>Monotonic constraints cost no accuracy and make the model explainable to credit officers and validators. SEX, MARRIAGE and AGE are not inputs; they are used only for the fairness check.</p>
+        <p class="small muted" style=${{ marginBottom: 0 }}>On this data the monotonic constraints cost no measurable accuracy (−0.0005 AUC) and make the model explainable to credit officers and validators. SEX, MARRIAGE and AGE are not inputs; they are used only for the fairness check.</p>
       </div>
       <div class="card"><h3>Engineering choices</h3><ul class="clean small">
         <li><b>Features inside the model pipeline</b> (utilisation, repayment ratios, delinquency patterns) so batch, endpoint and app score identically</li>

@@ -20,9 +20,9 @@ Predicts whether a credit-card client defaults on next month's payment (UCI *Def
 | Calibration error (ECE) / Brier / Hosmer-Lemeshow p | 0.0105 / 0.135 / 0.36 |
 | PD backtest, 7 rating grades | 6 green, 1 amber (grade B), 0 red |
 | Top 2 risk deciles | capture 50% of all defaults |
-| At the cost-optimal cut-off (PD >= 0.167) | catches 71% of defaults while flagging 40% of clients; expected cost 49% below acting on nobody |
+| At the cost-optimal cut-off (PD >= 0.167) | catches 71% of defaults while flagging 40% of clients; expected cost 49% below acting on nobody, assuming a missed default costs 5x an unnecessary intervention |
 
-Out-of-fold model selection (training set, 5-fold): monotonic LightGBM AUC 0.789, unconstrained LightGBM 0.789, logistic scorecard 0.771. The monotonicity constraints cost no accuracy. Sex, marital status and age are not model inputs; they are only used for the fairness check.
+Out-of-fold model selection (training set, 5-fold): monotonic LightGBM AUC 0.789, unconstrained LightGBM 0.789, logistic scorecard 0.771. On this data the monotonicity constraints cost no measurable accuracy (−0.0005 AUC). Sex, marital status and age are not model inputs; they are only used for the fairness check.
 
 <p>
 <img src="docs/images/backtest.png" width="49%"> <img src="docs/images/calibration.png" width="44%">
@@ -38,6 +38,28 @@ Everything ran on Azure ML in October 2026 (workspace `mlw-credit-risk`, Germany
 
 - **Without Azure:** `make setup`, then `make local` runs every pipeline step on your machine with a local MLflow registry, and `make app` opens the cockpit on that model. `make check` includes `test_endpoint_scoring_script`, which runs the endpoint's scoring script (`src/serving/score.py`) locally.
 - **Recreate on Azure:** `make azure-setup` (once, see `docs/AZURE_SETUP.md`), `make train`, then `make deploy` (about 15 minutes: blue/green with a smoke test) and `make invoke`. Run `make delete-endpoint` afterwards; the endpoint is billed for every hour it exists.
+
+## How I built this
+
+All the problem solving is mine: the credit-risk thinking, the architecture and application design, and the ideas behind them. That includes:
+
+- **Credit risk and domain:** treating the model's job as a calibrated PD, the cost-based cut-off, the master scale and grades, monotonic constraints, the PD floor, expected loss, IFRS 9 staging, early-warning triggers and escalation, limit steering, risk-based pricing, portfolio risk and capital, and how all of it transfers to a fleet-card portfolio.
+- **Validation and governance:** the backtest per grade, the fairness check, the champion/challenger gate, drift thresholds, the model card and the EU AI Act stance.
+- **Architecture and design:** the Azure ML pipeline structure, batch and online serving from one scoring function, monitoring and alerting, CI/CD with OIDC, the cockpit for credit officers, and the trade-offs behind each choice.
+
+I used AI coding assistants (Claude) to implement those decisions faster: writing code, documentation and the presentation deck. I reviewed the code and ran and verified every result locally and on Azure ML. `docs/SPEC.md` is the specification I worked from, with an acceptance check for each requirement and a traceability table.
+
+## Known limitations
+
+What these results do and do not show, and what I would change for a production credit model:
+
+- **Selection optimism.** Optuna tuning and the candidate comparison use the same training folds, so the cross-validated AUC (0.789) is optimistic; the untouched test set (0.7785) is the number to trust. Nested cross-validation or a separate validation split would remove the bias.
+- **Cost figures depend on assumptions.** The 0.167 cut-off and the 49% saving follow from an assumed 5:1 cost ratio (`config.yaml`), not from observed losses. With internal loss, recovery and revenue data the costs would differ per client and per action (limit cut, review, decline).
+- **The backtest is advisory.** The registration gate checks AUC, calibration and the champion; a red grade in the Jeffreys backtest triggers the runbook playbook rather than blocking registration. A bank would usually make it a gate with a documented exception process.
+- **"Champion" means the latest registered version.** A production setup would resolve the approved model through an alias or stage and compare calibration and business metrics as well as AUC.
+- **Fairness is checked on outcomes, not proved.** Sex, marital status and age are excluded from the inputs, and I report disparate impact, equal-opportunity and calibration gaps per group. Proxy effects through correlated features are not analysed, and the ratios have no confidence intervals.
+- **One-month PD, not lifetime ECL.** The target is next-month default. IFRS 9 staging and ECL here are illustrative; the Markov lifetime PD (`make analytics`) is the first step, and a real ECL also needs 12-month and lifetime PDs on the regulatory default definition, discounting and forward-looking scenarios.
+- **The data.** UCI Taiwan credit cards, one 2005 snapshot: no out-of-time sample, and performance does not transfer to another portfolio without retraining and validation on that portfolio's data.
 
 ## Architecture
 
@@ -143,13 +165,3 @@ docs/              Azure setup, runbook, example model card, images, analytics/ 
 - One cross-sectional 2005 snapshot means no out-of-time sample; the drift monitor and labelled-batch backtests cover that in operation.
 - `PAY_0` is renamed `PAY_1` to align with `BILL_AMT1` / `PAY_AMT1`. The raw panel almost never records a 1-month delay before the latest month (a known coding quirk), which shows in the roll-rate matrix.
 - Amounts are in NT$ (dataset currency).
-
-## How I built this
-
-All the problem solving is mine: the credit-risk thinking, the architecture and application design, and the ideas behind them. That includes:
-
-- **Credit risk and domain:** treating the model's job as a calibrated PD, the cost-based cut-off, the master scale and grades, monotonic constraints, the PD floor, expected loss, IFRS 9 staging, early-warning triggers and escalation, limit steering, risk-based pricing, portfolio risk and capital, and how all of it transfers to a fleet-card portfolio.
-- **Validation and governance:** the backtest per grade, the fairness check, the champion/challenger gate, drift thresholds, the model card and the EU AI Act stance.
-- **Architecture and design:** the Azure ML pipeline structure, batch and online serving from one scoring function, monitoring and alerting, CI/CD with OIDC, the cockpit for credit officers, and the trade-offs behind each choice.
-
-I used AI coding assistants (Claude) to implement those decisions faster: writing code, documentation and the presentation deck. I reviewed the code and ran and verified every result locally and on Azure ML. `docs/SPEC.md` is the specification I worked from, with an acceptance check for each requirement and a traceability table.
