@@ -99,7 +99,7 @@ Create the `production` environment in GitHub (*Settings -> Environments*) and a
 | Model monitor | serverless Spark per run | small per run |
 | Container Apps | per second beyond the monthly free grant | usually $0 for a demo |
 
-Set a budget alert in *Cost Management -> Budgets*. After the interview: `az group delete -n rg-credit-risk` removes everything.
+Set a budget alert in *Cost Management -> Budgets*. When finished: `make delete-endpoint` stops the hourly endpoint cost, and `az group delete -n rg-credit-risk` removes everything.
 
 ## 9. Troubleshooting
 

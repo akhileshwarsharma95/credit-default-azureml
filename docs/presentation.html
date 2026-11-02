@@ -2548,20 +2548,7 @@ const html = htm.bind(React.createElement);
 const I = (k) => window.ICONS[k];
 const IMG = (k) => window.IMAGES[k];
 
-const WS = {
-  sub: "ff629f6f-e7e7-4106-9364-879520fc6cd7",
-  tenant: "99a0cba1-a60c-4d39-bb12-bed50cb310c3",
-  rg: "rg-credit-risk",
-  name: "mlw-credit-risk",
-};
-const WSID = `wsid=/subscriptions/${WS.sub}/resourcegroups/${WS.rg}/workspaces/${WS.name}&tid=${WS.tenant}`;
-const studio = (run) => `https://ml.azure.com/runs/${run}?${WSID}`;
-const STUDIO = {
-  model: (v) => `https://ml.azure.com/model/credit-default-model:${v}/details?${WSID}`,
-  endpoint: `https://ml.azure.com/endpoints/realtime/credit-risk-fb1504/detail?${WSID}`,
-  data: `https://ml.azure.com/data/credit-default-raw/1/details?${WSID}`,
-  jobs: `https://ml.azure.com/experiments?${WSID}`,
-};
+const REPO = "https://github.com/akhileshwarsharma95/credit-default-azureml";
 const LinkBtn = ({ href, children, primary }) => html`<a class=${"iconbtn link-btn" + (primary ? " on" : "")} href=${href} target="_blank" rel="noopener">${children} ↗</a>`;
 
 /* ------------------------------------------------------------------ shared bits */
@@ -2737,7 +2724,7 @@ const NODE_TYPES = { svc: SvcNode, step: StepNode, zone: ZoneNode };
 const EDGE_TYPES = { flow: FlowEdge };
 
 /* ------------------------------------------------------------------ business overview */
-// Follows one real client (7926, scored live by the endpoint) through every stage.
+// Follows one real client (7926, scored by the endpoint) through every stage.
 const BIZ = {
   data: { x: 110, y: 250, n: "1", t: "Client behaviour", f: "6 months of history",
     q: "What do we know about the client?",
@@ -2857,7 +2844,7 @@ function BusinessOverview({ dark }) {
   const b = BIZ[sel];
   return html`<div>
     <${Head} title="Business overview: from behaviour to decisions"
-      lead="What we compute at each stage, how, why this way, and what it means for the business. Follow one real client (7926, scored live by the endpoint) through the whole chain." />
+      lead="What we compute at each stage, how, why this way, and what it means for the business. Follow one real client (7926, scored by the endpoint) through the whole chain." />
     <div class="row" style=${{ marginBottom: "12px" }}>
       <button class=${"iconbtn" + (play ? " on" : "")} onClick=${() => setPlay(!play)}>${play ? "❚❚ Pause" : "▶ Play the story"}</button>
       <button class="iconbtn" onClick=${() => { setPlay(false); setSel(BIZ_ORDER[Math.max(0, step - 1)]); }}>← Previous</button>
@@ -3061,7 +3048,6 @@ const GRADES = [
 
 function Model() {
   return html`<div>
-    <div style=${{ float: "right" }}><${LinkBtn} primary href=${STUDIO.model(3)}>Open registered model in Azure ML</${LinkBtn}></div>
     <${Head} title="Model & validation"
       lead="Held-out test set (5,993 clients). The question is not only 'does it rank' but 'are the PDs right per grade, is it fair, can we explain each decision'." />
     <div class="grid g6">
@@ -3166,7 +3152,7 @@ function Serving() {
           <li><b>Key auth</b>, telemetry to Application Insights, OpenTelemetry span per request</li>
         </ul>
         <pre class="json section">${SAMPLE_RESPONSE}</pre>
-        <div class="small muted" style=${{ marginTop: "6px" }}>Live response from <code>credit-risk-fb1504</code> (model v2, client 7926 of deploy/sample_request.json). Smoke test: 3 clients → A / Standard, D / Watch, G / Intervene.</div>
+        <div class="small muted" style=${{ marginTop: "6px" }}>Real response from the endpoint (model v2, client 7926 of deploy/sample_request.json, saved in deploy/sample_response.json). Smoke test: 3 clients → A / Standard, D / Watch, G / Intervene.</div>
       </div>
     </div>
   </div>`;
@@ -3250,8 +3236,7 @@ function Cockpit() {
     <${Head} title="Credit risk cockpit"
       lead="Streamlit app on Azure Container Apps (scales to zero), driven by the registered model package or the endpoint. One screen per question a credit-risk team asks." />
     <div class="row" style=${{ marginBottom: "12px" }}>
-      <a class="iconbtn on" href="http://localhost:8501" target="_blank" rel="noopener" style=${{ textDecoration: "none", padding: "6px 14px", fontSize: "13px" }}>Open live cockpit ↗</a>
-      <span class="small muted">start it first with <code>make app</code> (runs on your laptop, registered model v2 in <code>app/model</code>)</span>
+      <span class="small muted">Runs locally: <code>make setup</code>, <code>make local</code>, then <code>make app</code> opens it at localhost:8501 with the locally trained model.</span>
     </div>
     <div class="card"><${Gallery} items=${[
       ["app_portfolio", "Portfolio", "Portfolio view: exposure, expected loss, grade mix, segments."],
@@ -3327,16 +3312,11 @@ const RUNS = [
 
 function Live() {
   return html`<div>
-    <${Head} title="Live on Azure"
-      lead="What I have running in my Azure subscription, the evidence for the deliverable, and what it costs." />
+    <${Head} title="Azure run record"
+      lead="What ran in my Azure subscription in October 2026 and what it cost. I deleted the online endpoint on 2 November 2026 to stop hourly billing; everything here can be recreated with the make targets." />
     <div class="row" style=${{ marginBottom: "14px" }}>
-      <${LinkBtn} primary href=${STUDIO.model(3)}>Registered model (latest, v3)</${LinkBtn}>
-      <${LinkBtn} href=${STUDIO.model(2)}>Model v2 (on the endpoint)</${LinkBtn}>
-      <${LinkBtn} href=${STUDIO.endpoint}>Online endpoint</${LinkBtn}>
-      <${LinkBtn} href=${studio("eager_cord_w2yj7rnz4n")}>Latest training run</${LinkBtn}>
-      <${LinkBtn} href=${STUDIO.data}>Data asset</${LinkBtn}>
-      <${LinkBtn} href="https://github.com/akhileshwarsharma95/credit-default-azureml/actions">GitHub Actions</${LinkBtn}>
-      <${LinkBtn} href="http://localhost:8501">Cockpit (needs make app)</${LinkBtn}>
+      <${LinkBtn} primary href=${REPO}>Repository</${LinkBtn}>
+      <${LinkBtn} href=${REPO + "/actions"}>GitHub Actions</${LinkBtn}>
     </div>
     <div class="grid g4">
       <div class="card"><${Svc} icon="az/machine-learning" name="mlw-credit-risk">Azure ML workspace · Germany West Central</${Svc}></div>
@@ -3344,12 +3324,13 @@ function Live() {
       <div class="card"><${Svc} icon="az/machine-learning" name="credit-default-model v1–v3">test AUC 0.7785 · Gini 0.557 · ECE 0.0105 · v2, v3 from CI</${Svc}></div>
       <div class="card"><${Svc} icon="az/storage" name="Data assets">credit-default-raw:1 · credit-default-batch-portfolio-downturn:1</${Svc}></div>
     </div>
-    <div class="card section"><${Svc} icon="az/machine-learning" name="Online endpoint credit-risk-fb1504">
-      deployment <b>blue</b> = credit-default-model:2 · 100% traffic · Standard_D2as_v4 × 1 · smoke test passed · ~86 ms per request ·
-      <code>az ml online-endpoint invoke -n credit-risk-fb1504 -r deploy/sample_request.json -g rg-credit-risk -w mlw-credit-risk</code></${Svc}></div>
+    <div class="card section"><${Svc} icon="az/machine-learning" name="Online endpoint (deleted 2 Nov 2026)">
+      deployment <b>blue</b> served credit-default-model:2 · 100% traffic · Standard_D2as_v4 × 1 · smoke test passed · 75–86 ms per request ·
+      its real response is in <code>deploy/sample_response.json</code> · recreate with <code>make deploy</code> then <code>make invoke</code> ·
+      without Azure, <code>test_endpoint_scoring_script</code> runs the same scoring script locally</${Svc}></div>
     <div class="card section"><h3>Pipeline runs</h3>
       <table><thead><tr><th>Pipeline</th><th>Run</th><th>Status</th><th>Steps</th></tr></thead><tbody>
-        ${RUNS.map(([p, r, s, d]) => html`<tr key=${r}><td>${p}</td><td><a href=${studio(r)} target="_blank" rel="noopener"><code>${r}</code></a></td>
+        ${RUNS.map(([p, r, s, d]) => html`<tr key=${r}><td>${p}</td><td><code>${r}</code></td>
           <td><${Pill} kind="good">${s}</${Pill}></td><td class="small">${d}</td></tr>`)}
       </tbody></table></div>
     <div class="grid g2 section">
@@ -3365,7 +3346,7 @@ function Live() {
         <table><tbody>
           <tr><td>Compute cluster (scales to 0)</td><td>cents per pipeline run</td></tr>
           <tr><td>Container registry (Basic)</td><td>≈ $5 / month</td></tr>
-          <tr><td>Online endpoint</td><td>billed per hour while it exists, delete after use</td></tr>
+          <tr><td>Online endpoint</td><td>billed per hour while it exists (≈ $3 / day), deleted after use</td></tr>
           <tr><td>Storage, Key Vault, App Insights</td><td>negligible at this volume</td></tr>
         </tbody></table>
         <p class="small muted" style=${{ marginBottom: 0 }}>Clean-up: <code>python deploy/deploy_endpoint.py --delete</code> · <code>az group delete -n rg-credit-risk</code></p>
@@ -3580,7 +3561,7 @@ function Explainability() {
         <li>Keep the risk-raising contributions, ranked by size.</li>
         <li>Map each to a stable code and a plain sentence with the client's own values.</li>
         <li>Deliver the top 4 everywhere: batch file, endpoint response, watchlist, cockpit.</li></ol></div>
-      <div class="card"><h3>Live example (endpoint, client 7926)</h3>
+      <div class="card"><h3>Endpoint example (client 7926)</h3>
         <table><tbody>${reasons.map((r) => html`<tr key=${r.code}><td><code>${r.code}</code></td><td>${r.text}</td></tr>`)}</tbody></table>
         <p class="small muted" style=${{ marginBottom: 0 }}>PD 83% · grade G · action Intervene</p></div>
       <div class="card"><h3>Why it holds up</h3><ul class="clean small">
@@ -3684,7 +3665,7 @@ const TABS = [
   ["risk", "Portfolio risk", PortfolioRisk],
   ["cockpit", "Cockpit app", Cockpit],
   ["governance", "CI/CD & governance", Governance],
-  ["live", "Live on Azure", Live],
+  ["live", "Azure run record", Live],
   ["roadmap", "Roadmap", Roadmap],
   ["dkv", "For DKV Mobility", Dkv],
 ];

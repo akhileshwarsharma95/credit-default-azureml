@@ -1,0 +1,86 @@
+{
+  "model_version": "credit-default-model:2",
+  "threshold": 0.16666666666666666,
+  "latency_ms": 79.3,
+  "predictions": [
+    {
+      "pd": 0.01996,
+      "grade": "A",
+      "action": "Standard",
+      "flag": 0,
+      "ead": 247859.5,
+      "el": 2967.7190687361417,
+      "ifrs9_stage": 1,
+      "ecl": 2967.7190687361417,
+      "ews_triggers": "Paid less than 10% of the previous bill",
+      "limit_action": "Keep",
+      "recommended_limit": 400000.0,
+      "ID": 2382,
+      "reason_codes": []
+    },
+    {
+      "pd": 0.14962,
+      "grade": "D",
+      "action": "Watch",
+      "flag": 0,
+      "ead": 42752.0,
+      "el": 3837.910772578888,
+      "ifrs9_stage": 1,
+      "ecl": 3837.910772578888,
+      "ews_triggers": "",
+      "limit_action": "Keep",
+      "recommended_limit": 80000.0,
+      "ID": 20631,
+      "reason_codes": [
+        {
+          "code": "RC_BILL_AMT1",
+          "text": "Bill amount in Sep (5,504) below typical level"
+        },
+        {
+          "code": "RC_PAY_AMT1",
+          "text": "Low payment in Sep (1,004)"
+        },
+        {
+          "code": "RC_PAY_AMT2",
+          "text": "Low payment in Aug (504)"
+        },
+        {
+          "code": "RC_LIMIT_BAL",
+          "text": "Low credit limit (80,000)"
+        }
+      ]
+    },
+    {
+      "pd": 0.83333,
+      "grade": "G",
+      "action": "Intervene",
+      "flag": 1,
+      "ead": 41449.5,
+      "el": 20724.75,
+      "ifrs9_stage": 2,
+      "ecl": 24754.5625,
+      "ews_triggers": "Paid less than 10% of the previous bill; PD in grade F/G",
+      "limit_action": "Reduce limit",
+      "recommended_limit": 37000.0,
+      "ID": 7926,
+      "reason_codes": [
+        {
+          "code": "RC_PAY_1",
+          "text": "Payment 2 months late in Sep"
+        },
+        {
+          "code": "RC_MONTHS_SINCE_DELAY",
+          "text": "Most recent late payment 1 month ago"
+        },
+        {
+          "code": "RC_MAX_DELAY",
+          "text": "Longest payment delay: 2 months"
+        },
+        {
+          "code": "RC_N_DELAYS_RECENT3",
+          "text": "3 late payments in the last 3 months"
+        }
+      ]
+    }
+  ]
+}

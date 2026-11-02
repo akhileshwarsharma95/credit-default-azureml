@@ -28,6 +28,17 @@ Out-of-fold model selection (training set, 5-fold): monotonic LightGBM AUC 0.789
 <img src="docs/images/backtest.png" width="49%"> <img src="docs/images/calibration.png" width="44%">
 </p>
 
+## Presentation
+
+`docs/presentation.html` is the deck I presented: one self-contained file that works offline. Download it and open it in a browser; the tabs or arrow keys move between slides. `make deck` rebuilds it from `docs/presentation/`.
+
+## Azure status
+
+Everything ran on Azure ML in October 2026 (workspace `mlw-credit-risk`, Germany West Central): training pipelines, a downturn batch-monitoring run, and training from GitHub Actions that registered models v2 and v3 through the champion/challenger gate. The online endpoint served model v2 until 2 November 2026; I deleted it then to stop hourly billing. `docs/AZURE_RUNS.md` records every run, model version, metric and data asset exported from the workspace; `docs/screenshots/` has the studio views, and `deploy/sample_response.json` is the endpoint's real response to `deploy/sample_request.json`.
+
+- **Without Azure:** `make setup`, then `make local` runs every pipeline step on your machine with a local MLflow registry, and `make app` opens the cockpit on that model. `make check` includes `test_endpoint_scoring_script`, which runs the endpoint's scoring script (`src/serving/score.py`) locally.
+- **Recreate on Azure:** `make azure-setup` (once, see `docs/AZURE_SETUP.md`), `make train`, then `make deploy` (about 15 minutes: blue/green with a smoke test) and `make invoke`. Run `make delete-endpoint` afterwards; the endpoint is billed for every hour it exists.
+
 ## Architecture
 
 ```mermaid
@@ -132,3 +143,13 @@ docs/              Azure setup, runbook, example model card, images, analytics/ 
 - One cross-sectional 2005 snapshot means no out-of-time sample; the drift monitor and labelled-batch backtests cover that in operation.
 - `PAY_0` is renamed `PAY_1` to align with `BILL_AMT1` / `PAY_AMT1`. The raw panel almost never records a 1-month delay before the latest month (a known coding quirk), which shows in the roll-rate matrix.
 - Amounts are in NT$ (dataset currency).
+
+## How I built this
+
+All the problem solving is mine: the credit-risk thinking, the architecture and application design, and the ideas behind them. That includes:
+
+- **Credit risk and domain:** treating the model's job as a calibrated PD, the cost-based cut-off, the master scale and grades, monotonic constraints, the PD floor, expected loss, IFRS 9 staging, early-warning triggers and escalation, limit steering, risk-based pricing, portfolio risk and capital, and how all of it transfers to a fleet-card portfolio.
+- **Validation and governance:** the backtest per grade, the fairness check, the champion/challenger gate, drift thresholds, the model card and the EU AI Act stance.
+- **Architecture and design:** the Azure ML pipeline structure, batch and online serving from one scoring function, monitoring and alerting, CI/CD with OIDC, the cockpit for credit officers, and the trade-offs behind each choice.
+
+I used AI coding assistants (Claude) to implement those decisions faster: writing code, documentation and the presentation deck. I reviewed the code and ran and verified every result locally and on Azure ML. `docs/SPEC.md` is the specification I worked from, with an acceptance check for each requirement and a traceability table.

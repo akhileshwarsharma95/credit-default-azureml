@@ -13,4 +13,3 @@ app/model/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
-docs/PRESENTATION.md
